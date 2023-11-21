@@ -104,14 +104,7 @@ const App = () => {
 
             // Detect vertical lines using morphological operations
             let verticalKernel = window.cv.getStructuringElement(window.cv.MORPH_RECT, new window.cv.Size(1, 25));
-            window.cv.morphologyEx(
-                gray,
-                edges,
-                window.cv.MORPH_OPEN,
-                verticalKernel,
-                new window.cv.Point(-1, -1),
-                2
-            );
+            window.cv.morphologyEx(gray, edges, window.cv.MORPH_OPEN, verticalKernel, new window.cv.Point(-1, -1), 2);
 
             // Find contours of the detected lines
             let contours = new window.cv.MatVector();
@@ -133,18 +126,6 @@ const App = () => {
             // bar and discarding any bar that differes by a height of more
             // than 5.
             ////////////////////////////////////////////////////////////      
-            const calculateMedian = (array) => {
-                const sortedArray = array.slice().sort((a, b) => a - b);
-                const middle = Math.floor(sortedArray.length / 2);
-
-                if (sortedArray.length % 2 === 0) {
-                    // If the array has an even number of elements, take the average of the middle two
-                    return (sortedArray[middle - 1] + sortedArray[middle]) / 2;
-                } else {
-                    // If the array has an odd number of elements, return the middle element
-                    return sortedArray[middle];
-                }
-            };
 
             // Calculate the median height of contours
             const heights = filteredContours.map((contour) => window.cv.boundingRect(contour).height);
@@ -165,43 +146,19 @@ const App = () => {
             // bars on the same staff horizontally.
             ////////////////////////////////////////////////////////////
 
-            // Define a function to group contours by height with a tolerance
-            function groupContoursByY(contours, tolerance) {
-                const localGroupedContours = [];
-                for (const contour of contours) {
-                    const y = window.cv.boundingRect(contour).y;
-
-                    // Check if there's a group with a similar height
-                    let foundGroup = false;
-                    for (const group of localGroupedContours) {
-                        const groupY = window.cv.boundingRect(group[0]).y;
-                        if (Math.abs(y - groupY) <= tolerance) {
-                            group.push(contour);
-                            foundGroup = true;
-                            break;
-                        }
-                    }
-
-                    // If no similar group is found, create a new group
-                    if (!foundGroup) {
-                        localGroupedContours.push([contour]);
-                    }
-                }
-
-                return localGroupedContours;
-            }
-
             // Group contours by y-coordinate with a tolerance of 5
             const groupedContours = groupContoursByY(filteredContours, 5);
 
             // Sort each group of contours by x-coordinate
-            for (let group of groupedContours) {
+            for (let i = 0; i < groupedContours.length; i++) {
+                let group = groupedContours[i];
                 group.sort((contour1, contour2) => {
                     const rect1 = window.cv.boundingRect(contour1);
                     const rect2 = window.cv.boundingRect(contour2);
                     return rect2.x - rect1.x;
                 });
-                group = filterContoursByDistance(group);
+                // Filter the group and update groupedContours at the same index
+                groupedContours[i] = filterContoursByDistance(group, 20);
             }
 
             ////////////////////////////////////////////////////////////
@@ -226,9 +183,7 @@ const App = () => {
 
             const allMeasures = [].concat(...measureRectangles).reverse();
 
-            console.log(allMeasures.length.toString() + " measures across " + measureRectangles.length.toString() + " lines");
-
-            // Create a canvas to show the result
+            // Get the canvas to show the result
             let canvasElement = document.getElementById(`canvas-${index}`);
             const ctx = canvasElement.getContext('2d');
             window.cv.imshow(canvasElement, src);
@@ -349,5 +304,43 @@ function filterContoursByDistance(contours, minDistance) {
     return filteredContours;
 }
 
+const calculateMedian = (array) => {
+    const sortedArray = array.slice().sort((a, b) => a - b);
+    const middle = Math.floor(sortedArray.length / 2);
+
+    if (sortedArray.length % 2 === 0) {
+        // If the array has an even number of elements, take the average of the middle two
+        return (sortedArray[middle - 1] + sortedArray[middle]) / 2;
+    } else {
+        // If the array has an odd number of elements, return the middle element
+        return sortedArray[middle];
+    }
+};
+
+// Define a function to group contours by height with a tolerance
+function groupContoursByY(contours, tolerance) {
+    const localGroupedContours = [];
+    for (const contour of contours) {
+        const y = window.cv.boundingRect(contour).y;
+
+        // Check if there's a group with a similar height
+        let foundGroup = false;
+        for (const group of localGroupedContours) {
+            const groupY = window.cv.boundingRect(group[0]).y;
+            if (Math.abs(y - groupY) <= tolerance) {
+                group.push(contour);
+                foundGroup = true;
+                break;
+            }
+        }
+
+        // If no similar group is found, create a new group
+        if (!foundGroup) {
+            localGroupedContours.push([contour]);
+        }
+    }
+
+    return localGroupedContours;
+}
 
 export default App;
