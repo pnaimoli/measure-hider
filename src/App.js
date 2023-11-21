@@ -11,25 +11,62 @@ const App = () => {
     const [images, setImages] = useState([]);
     const [isMetronomeOn, setIsMetronomeOn] = useState(true);
     const [bpm, setBpm] = useState(60); // Default BPM
-    const [opencvReady, setOpencvReady] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false); // Added state for Play/Stop
     const animationRef = useRef(null);
     const [allMeasuresByCanvas, setAllMeasuresByCanvas] = useState({});
 
     useEffect(() => {
-        // Check if OpenCV has loaded
-        if (window.cv && window.cv.imread) {
-            setOpencvReady(true);
-        } else {
-            // If not, we listen for a custom event that indicates OpenCV has loaded
-            document.addEventListener('opencv-ready', () => setOpencvReady(true), { once: true });
-        }
-
         return () => {
             // Cleanup the animation interval when the component unmounts
             clearInterval(animationRef.current);
         };
     }, []);
+
+    useEffect(() => {
+        images.forEach((dataUrl, index) => {
+            const img = new Image();
+            img.onload = () => {
+                const allMeasures = detectMeasures(img, index);
+
+                // Update the state with allMeasures for this canvas index
+                setAllMeasuresByCanvas((prevState) => ({
+                    ...prevState,
+                    [index]: allMeasures,
+                }));
+
+                // Get the canvas to show the result
+                let canvasElement = document.getElementById(`canvas-${index}`);
+                const ctx = canvasElement.getContext('2d');
+                ctx.canvas.width = img.width;
+                ctx.canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height);
+
+                // Draw measure rectangles and numbers
+                ctx.strokeStyle = 'red'; // Border color
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.2)'; // Transparent fill color
+                ctx.font = '16px Arial'; // Font for measure numbers
+                ctx.lineWidth = 2; // Border width
+
+                allMeasures.forEach((rect, measureIndex) => {
+                    // Draw the measure rectangle
+                    ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+                    ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+
+                    // Draw the measure number above the rectangle
+                    const measureNumber = measureIndex + 1;
+                    const textWidth = ctx.measureText(measureNumber.toString()).width;
+                    const textX = rect.x + rect.width / 2 - textWidth / 2;
+                    const textY = rect.y - 10; // Position above the rectangle
+                    ctx.fillText(measureNumber.toString(), textX, textY);
+                });
+
+                // Attach a click event listener to the canvas
+                //                            const canvasElement = document.getElementById(`canvas-${index}`);
+                //                            canvasElement.addEventListener('click', (event) => handleCanvasClick(index, event));
+            };
+            img.src = dataUrl;
+        });
+    }, [images]);
 
     // useEffect to add the click listener when allMeasuresByCanvas changes
     useEffect(() => {
@@ -106,14 +143,18 @@ const App = () => {
     // Handle sound effects
     //////////////////////////////////////////////////////////////////////////////// 
     useEffect(() => {
-        // Create an AudioContext instance locally
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
+        // We'd like to just do:
+        // const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // but we can't since AudioContexts need to be created as a result of a user
+        // gesture and this function gets called pretty early on.
+        let audioContext;
         let intervalId;
 
-        if (isPlaying && isMetronomeOn && audioContext) {
+        if (isPlaying && isMetronomeOn) {
             // Calculate tick duration and metronome logic here
             const tickDuration = (60 / bpm) * 1000; // Duration in milliseconds
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
 
             intervalId = setInterval(() => {
                 // Create a new oscillator for each tick
@@ -131,7 +172,9 @@ const App = () => {
         return () => {
             clearInterval(intervalId);
             // Close the AudioContext when cleaning up
-            audioContext.close();
+            if (audioContext) {
+                audioContext.close();
+            }
         };
     }, [isPlaying, bpm, isMetronomeOn]);
 
@@ -156,54 +199,6 @@ const App = () => {
             try {
                 const pngImages = await convertPdfToPng(file);
                 setImages(pngImages);
-                if (opencvReady) {
-                    // Once OpenCV is ready, process each image
-                    pngImages.forEach((dataUrl, index) => {
-                        const img = new Image();
-                        img.onload = () => {
-                            const allMeasures = detectMeasures(img, index);
-
-                            // Update the state with allMeasures for this canvas index
-                            setAllMeasuresByCanvas((prevState) => ({
-                                ...prevState,
-                                [index]: allMeasures,
-                            }));
-
-                            // Get the canvas to show the result
-                            let canvasElement = document.getElementById(`canvas-${index}`);
-                            const ctx = canvasElement.getContext('2d');
-                            ctx.canvas.width = img.width;
-                            ctx.canvas.height = img.height;
-                            ctx.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height);
-
-                            // Draw measure rectangles and numbers
-                            ctx.strokeStyle = 'red'; // Border color
-                            ctx.fillStyle = 'rgba(255, 0, 0, 0.2)'; // Transparent fill color
-                            ctx.font = '16px Arial'; // Font for measure numbers
-                            ctx.lineWidth = 2; // Border width
-
-                            allMeasures.forEach((rect, measureIndex) => {
-                                // Draw the measure rectangle
-                                ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
-                                ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
-
-                                // Draw the measure number above the rectangle
-                                const measureNumber = measureIndex + 1;
-                                const textWidth = ctx.measureText(measureNumber.toString()).width;
-                                const textX = rect.x + rect.width / 2 - textWidth / 2;
-                                const textY = rect.y - 10; // Position above the rectangle
-                                ctx.fillText(measureNumber.toString(), textX, textY);
-                            });
-
-                            // Attach a click event listener to the canvas
-                            //                            const canvasElement = document.getElementById(`canvas-${index}`);
-                            //                            canvasElement.addEventListener('click', (event) => handleCanvasClick(index, event));
-                        };
-                        img.src = dataUrl;
-                    });
-                } else {
-                    console.error("OpenCV is not ready");
-                }
             } catch (error) {
                 console.error("Error converting PDF to PNG: ", error);
             }
