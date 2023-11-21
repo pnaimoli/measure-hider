@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import sheetMusicLogo from './sheet-music-logo.png';
 
@@ -8,9 +8,12 @@ pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker
 
 const App = () => {
     const [images, setImages] = useState([]);
-    const [isMetronomeOn, setIsMetronomeOn] = useState(false);
+    const [isMetronomeOn, setIsMetronomeOn] = useState(true);
     const [bpm, setBpm] = useState(60); // Default BPM
     const [opencvReady, setOpencvReady] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false); // Added state for Play/Stop
+    const animationRef = useRef(null);
+    const [allMeasuresByCanvas, setAllMeasuresByCanvas] = useState({});
 
     useEffect(() => {
         // Check if OpenCV has loaded
@@ -20,11 +23,129 @@ const App = () => {
             // If not, we listen for a custom event that indicates OpenCV has loaded
             document.addEventListener('opencv-ready', () => setOpencvReady(true), { once: true });
         }
+
+        return () => {
+            // Cleanup the animation interval when the component unmounts
+            clearInterval(animationRef.current);
+        };
     }, []);
+
+    // useEffect to add the click listener when allMeasuresByCanvas changes
+    useEffect(() => {
+        const handleCanvasClick = (canvasIndex, event) => {
+            let canvasElement = document.getElementById(`canvas-${canvasIndex}`);
+            const canvasRect = canvasElement.getBoundingClientRect();
+            const mouseX = event.clientX - canvasRect.left;
+            const mouseY = event.clientY - canvasRect.top;
+
+            // Check if the canvasId exists in allMeasuresByCanvas
+            if (allMeasuresByCanvas[canvasIndex]) {
+                // Implement your logic to start/stop the animation for this canvas
+                // You can use the canvasId to access the specific measures for this canvas
+
+                // ... your animation logic here
+                if (isPlaying) {
+                    // Stop the animation and reveal the music
+                    clearInterval(animationRef.current);
+
+                    // Toggle the Play/Stop state
+                    setIsPlaying(!isPlaying);
+                } else {
+                    // Find the measure we clicked on.
+                    const measures = allMeasuresByCanvas[canvasIndex];
+
+                    // Loop through the measures and check if the click is within any of them
+                    for (let i = 0; i < measures.length; i++) {
+                        const measure = measures[i];
+                        if (
+                            mouseX >= measure.x &&
+                            mouseX <= measure.x + measure.width &&
+                            mouseY >= measure.y &&
+                            mouseY <= measure.y + measure.height
+                        ) {
+                            // The click is within this measure, you can perform your actions here
+                            console.log(`Clicked on page ${canvasIndex}, measure ${i + 1}`);
+
+                            // Start the animation
+                            const duration = (60 / bpm) * 1000;  // This should be in milliseconds?
+                            animationRef.current = setInterval(() => {
+                                // Hide measures sequentially
+                                hideNextMeasure(canvasIndex, i);
+                            }, duration);
+
+                            // Toggle the Play/Stop state
+                            setIsPlaying(!isPlaying);
+                            break;
+                        }
+                    }
+                }
+            }
+        };
+
+        // Loop through canvas indices and add click listeners
+        for (let canvasIndex = 0; canvasIndex < Object.keys(allMeasuresByCanvas).length; canvasIndex++) {
+            const canvasElement = document.getElementById(`canvas-${canvasIndex}`);
+
+            if (canvasElement) {
+                // Attach the click event listener
+                canvasElement.addEventListener('click', (event) => {
+                    // Call the arrow function with access to state variables
+                    handleCanvasClick(canvasIndex, event);
+                });
+            }
+        }
+    }, [allMeasuresByCanvas, isPlaying, bpm]);
+
+    //////////////////////////////////////////////////////////////////////////////// 
+    // Handle sound effects
+    //////////////////////////////////////////////////////////////////////////////// 
+    useEffect(() => {
+        // Create an AudioContext instance locally
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        let intervalId;
+
+        if (isPlaying && isMetronomeOn && audioContext) {
+            // Calculate tick duration and metronome logic here
+            const tickDuration = (60 / bpm) * 1000; // Duration in milliseconds
+
+            intervalId = setInterval(() => {
+                // Create a new oscillator for each tick
+                const oscillator = audioContext.createOscillator();
+                oscillator.type = 'square'; // Adjust as needed
+                oscillator.connect(audioContext.destination);
+                oscillator.start();
+
+                // Schedule the oscillator to stop after a short duration
+                oscillator.stop(audioContext.currentTime + 0.1); // Adjust the duration as needed
+            }, tickDuration);
+        }
+
+        // Cleanup
+        return () => {
+            clearInterval(intervalId);
+            // Close the AudioContext when cleaning up
+            audioContext.close();
+        };
+    }, [isPlaying, bpm, isMetronomeOn]);
+
+    const hideNextMeasure = (canvas, measure) => {
+        // Implement animated gradient blur to hide the next measure
+        // ...
+
+        // After hiding the last measure, stop the animation
+        if (false/* Check if all measures are hidden */) {
+            clearInterval(animationRef.current);
+            setIsPlaying(false); // Set to Stop state
+        }
+    };
 
     const handleFileUpload = async (event) => {
         const file = event.target.files[0];
         if (file) {
+            // Clear the allMeasuresByCanvas state when a new file is loaded
+            setAllMeasuresByCanvas({});
+
             try {
                 const pngImages = await convertPdfToPng(file);
                 setImages(pngImages);
@@ -32,7 +153,13 @@ const App = () => {
                     // Once OpenCV is ready, process each image
                     pngImages.forEach((dataUrl, index) => {
                         const img = new Image();
-                        img.onload = () => processSheetMusic(img, index);
+                        img.onload = () => {
+                            processSheetMusic(img, index);
+
+                            // Attach a click event listener to the canvas
+//                            const canvasElement = document.getElementById(`canvas-${index}`);
+//                            canvasElement.addEventListener('click', (event) => handleCanvasClick(index, event));
+                        };
                         img.src = dataUrl;
                     });
                 } else {
@@ -168,8 +295,8 @@ const App = () => {
                 // Create an array of measure rectangles in this group
                 const groupRectangles = [];
                 for (let i = 0; i < group.length - 1; i++) {
-                    const rectA = window.cv.boundingRect(group[i]);
-                    const rectB = window.cv.boundingRect(group[i + 1]);
+                    const rectB = window.cv.boundingRect(group[i]);
+                    const rectA = window.cv.boundingRect(group[i + 1]);
                     const measureRect = {
                         x: rectA.x,
                         y: rectA.y,
@@ -181,7 +308,14 @@ const App = () => {
                 return groupRectangles;
             });
 
+            // Finally collapse all the measures into a single list
             const allMeasures = [].concat(...measureRectangles).reverse();
+
+            // Update the state with allMeasures for this canvas index
+            setAllMeasuresByCanvas((prevState) => ({
+                ...prevState,
+                [index]: allMeasures,
+            }));
 
             // Get the canvas to show the result
             let canvasElement = document.getElementById(`canvas-${index}`);
@@ -212,21 +346,6 @@ const App = () => {
         } else {
             console.error('Please make sure OpenCV.js is loaded before calling this function.');
         }
-    };
-
-    const hideMeasure = (canvasElement, x1, x2, y1, y2) => {
-        // Implement animated gradient blur to hide the measure
-        // You can use HTML5 Canvas APIs for this, such as creating a gradient and applying it as a mask
-        // Here's where you can add the code to gradually hide the measure based on metronome settings (bpm)
-        // You may need to use requestAnimationFrame for smooth animation
-        // Example code:
-        // const ctx = canvasElement.getContext('2d');
-        // const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
-        // gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-        // gradient.addColorStop(1, 'rgba(255, 255, 255, 1)');
-        // ctx.fillStyle = gradient;
-        // ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
-        // ...
     };
 
     return (
