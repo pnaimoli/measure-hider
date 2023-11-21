@@ -1,5 +1,5 @@
 
-export function processSheetMusic(imageElement, index) {
+export function detectMeasures(imageElement, index) {
     // Ensure OpenCV has been loaded
     if (window.cv && window.cv.imread) {
         // Read the image from the HTMLImageElement

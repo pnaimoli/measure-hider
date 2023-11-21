@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import sheetMusicLogo from './sheet-music-logo.png';
 
-import { processSheetMusic } from './measureDetection';
+import { detectMeasures } from './measureDetection';
 import * as pdfjs from 'pdfjs-dist'
 import * as pdfjsWorker from 'pdfjs-dist/build/pdf.worker';
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker
@@ -161,7 +161,7 @@ const App = () => {
                     pngImages.forEach((dataUrl, index) => {
                         const img = new Image();
                         img.onload = () => {
-                            const allMeasures = processSheetMusic(img, index);
+                            const allMeasures = detectMeasures(img, index);
 
                             // Update the state with allMeasures for this canvas index
                             setAllMeasuresByCanvas((prevState) => ({
