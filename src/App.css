@@ -61,7 +61,8 @@
   pointer-events: none; /* Allow clicks to pass through */
 }
 
-.measure:hover::before {
+/* .measure:hover::before, */
+.measure.played::before {
   width: 100%; /* On hover, fill the width to 100% */
   background-color: white; /* Color to fill the div */
   transition: var(--transition-time) ease-in-out; /* Transition width property */

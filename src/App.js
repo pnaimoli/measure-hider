@@ -65,19 +65,55 @@ const App = () => {
 
                 // If this is the first beat, find the next measure and initiate a
                 // hide transition
+                if (beatsCalled === 0) {
+                    const clickedMeasure = document.querySelector('.measure[data-clicked="true"]');
+                    if (clickedMeasure) {
+                        const unplayedMeasures = document.querySelectorAll('.measure:not(.played)');
 
+                        let nextMeasure;
+                        for (let i = 0; i < unplayedMeasures.length; i++) {
+                            // Check if unplayedMeasures appears after the clickedMeasure
+                            const unplayedMeasure = unplayedMeasures[i];
+                            const position = clickedMeasure.compareDocumentPosition(unplayedMeasure);
 
-                // If this is the last beat, go back to 0!
-                if (++beatsCalled === 3) {
-                    clearInterval(metronomeId);
+                            // Check if unplayedMeasure appears after clickedMeasure
+                            if (unplayedMeasure === clickedMeasure || position & Node.DOCUMENT_POSITION_FOLLOWING) {
+                                // This means unplayedMeasure appears after clickedMeasure
+                                nextMeasure = unplayedMeasure;
+                                break; // Stop after the first unplayed measure found after clickedMeasure
+                            }
+                        }
+                        if (!nextMeasure) {
+                            // If there are no more unplayed measures, stop!
+                            setIsPlaying(false);
+                        } else {
+                            nextMeasure.classList.add('played');
+                        }
+                    } else {
+                        console.log('No measures have been clicked yet.');
+                    }
+                }
+
+                if (beatsCalled === 3) {
+                    // If this is the last beat, go back to 0!
                     beatsCalled = 0;
+                } else {
+                    beatsCalled++;
                 }
             }, tickDuration);
+        } else {
+            // Remove the "played" class from any played measures
+            const playedMeasures = document.querySelectorAll('.measure.played');
+            for (let i = 0; i < playedMeasures.length; i++) {
+                const measure = playedMeasures[i];
+                measure.classList.remove('played');
+            }
         }
 
         // Cleanup
         return () => {
             clearInterval(metronomeId);
+
             // Close the AudioContext when cleaning up
             if (audioContext) {
                 audioContext.close();
@@ -88,6 +124,16 @@ const App = () => {
     const handleMeasureClick = async (divElement, event) => {
         console.log(`Clicked a measure!`);
         setIsPlaying(!isPlaying);
+
+        // Remove the "clicked" attribute from all measures
+        const allMeasures = document.querySelectorAll('.measure');
+        allMeasures.forEach((measure) => {
+            measure.removeAttribute('data-clicked');
+        });
+
+        // Add the "clicked" attribute to the clicked measure
+        const clickedMeasure = event.currentTarget;
+        clickedMeasure.setAttribute('data-clicked', 'true');
     };
 
     const handleFileUpload = async (event) => {
@@ -152,6 +198,9 @@ const App = () => {
         });
     };
 
+    ////////////////////////////////////////////////////////////////////////////////
+    // Start rendering our elements
+    ////////////////////////////////////////////////////////////////////////////////
     const renderMeasures = (canvasIndex) => {
         // This can happen legitimately on an empty page, for example.
         if (!allMeasuresByCanvas[canvasIndex]) {
