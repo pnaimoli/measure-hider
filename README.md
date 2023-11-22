@@ -69,9 +69,9 @@ Provide step-by-step instructions on how to install and set up your project. Mak
 
 Start the development server:
 
-    ```bash
-    npm start
-    ```
+   ```bash
+   npm install
+   ```
 
 This will launch the Measure Hider web application on your local server.
 Open your web browser and go to http://localhost:3000 to access Measure Hider.
