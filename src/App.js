@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import sheetMusicLogo from './sheet-music-logo.png';
 
@@ -11,114 +11,12 @@ const App = () => {
     const [images, setImages] = useState([]);
     const [isMetronomeOn, setIsMetronomeOn] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false); // Added state for Play/Stop
-    const bpmRef = useRef(60); // Default BPM
-    const animationRef = useRef(null);
+    const [bpm, setBpm] = useState(60); // Default BPM
     const [allMeasuresByCanvas, setAllMeasuresByCanvas] = useState({}); // Changed to useState
-    const nextMeasureRef = useRef(-1);
-    const nextCanvasRef = useRef(-1);
 
-    useEffect(() => {
-//        return () => {
-//            // Cleanup the animation interval when the component unmounts
-//            clearInterval(animationRef.current);
-//        };
-    }, []);
-
-    const renderMeasures = (canvasIndex) => {
-        if (!allMeasuresByCanvas[canvasIndex]) {
-            return;
-        }
-        return allMeasuresByCanvas[canvasIndex].map((measure, index) => (
-            <div
-            key={index}
-            className="measure"
-            onClick={(event) => handleMeasureClick(this, event)}
-            style={{
-                position: 'absolute',
-                    left: measure.x,
-                    top: measure.y,
-                    width: measure.width,
-                    height: measure.height,
-                    background: 'rgba(255, 0, 255, 0.15)',
-                    border: '0px solid red',
-                    fontSize: '16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-            }}
-            >
-            <div className="measure-text">
-            {index + 1}
-            </div>
-            </div>
-        ));
-    };
-
-    //////////////////////////////////////////////////////////////////////////////// 
-    // Draw debug information and add 'click' listeners to each page
-    //////////////////////////////////////////////////////////////////////////////// 
-    const handleCanvasClick = useCallback((canvasIndex, event) => {
-        // If we're already playing, clicking anywhere stops the app.
-        if (isPlaying) {
-            setIsPlaying(!isPlaying);
-            return;
-        }
-
-        // If there aren't measures on this page, just get out.
-        const measures = allMeasuresByCanvas[canvasIndex];
-        if (!measures) {
-            return;
-        }
-
-        // Find the measure we clicked on.
-        let canvasElement = document.getElementById(`canvas-${canvasIndex}`);
-        const canvasRect = canvasElement.getBoundingClientRect();
-        const mouseX = event.clientX - canvasRect.left;
-        const mouseY = event.clientY - canvasRect.top;
-
-        // Loop through the measures and check if the click is within any of them
-        let measureIndex;
-        for (let i = 0; i < measures.length; i++) {
-            const measure = measures[i];
-            if (
-                mouseX >= measure.x &&
-                mouseX <= measure.x + measure.width &&
-                mouseY >= measure.y &&
-                mouseY <= measure.y + measure.height
-            ) {
-                measureIndex = i;
-                break;
-            }
-        };
-
-        // If we didn't click inside a measure, turn off the app.
-        if (measureIndex === undefined) {
-            setIsPlaying(false);
-            return;
-        }
-
-        // The click is within this measure, you can perform your actions here
-        console.log(`Clicked on page ${canvasIndex}, measure ${measureIndex + 1}`);
-
-        // Start the animation
-        const duration = (60 / bpmRef.current) * 1000;  // This should be in milliseconds?
-        animationRef.current = setInterval(() => {
-            // Hide measures sequentially
-            hideNextMeasure(canvasIndex, measureIndex);
-
-            // Is there a next measure?
-            if (measureIndex === measures.length - 1) {
-                // Stop for now, don't go on to the next page.
-                clearInterval(animationRef.current);
-            }
-        }, duration / 4.0); // TODO: This only works for 4/4 time
-
-        // Toggle the Play/Stop state
-        nextMeasureRef.current = measureIndex;
-        nextCanvasRef.current = canvasIndex;
-        setIsPlaying(true);
-    }, [isPlaying, allMeasuresByCanvas]);
-
+    ////////////////////////////////////////////////////////////////////////////////
+    // Once the images are loaded, detect the measures
+    ////////////////////////////////////////////////////////////////////////////////
     useEffect(() => {
         images.forEach((dataUrl, index) => {
             const img = new Image();
@@ -133,89 +31,63 @@ const App = () => {
             };
             img.src = dataUrl;
         });
-    }, [images, isPlaying, handleCanvasClick]);
+    }, [images]);
 
-
-    //////////////////////////////////////////////////////////////////////////////// 
-    // Handle sound effects
-    //////////////////////////////////////////////////////////////////////////////// 
+    ////////////////////////////////////////////////////////////////////////////////
+    // This is the main function that handles playing the metronome
+    // and initiating the animations.
+    ////////////////////////////////////////////////////////////////////////////////
     useEffect(() => {
         // We'd like to just do:
         // const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         // but we can't since AudioContexts need to be created as a result of a user
         // gesture and this function gets called pretty early on.
         let audioContext;
-        let animation;
-        let intervalId;
+        let metronomeId;
 
-        if (isPlaying && isMetronomeOn) {
+        if (isPlaying) {
             // Calculate tick duration and metronome logic here
-            const tickDuration = (60 / bpmRef.current) * 1000; // Duration in milliseconds
+            const tickDuration = (60 / bpm) * 1000; // Duration in milliseconds
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-            intervalId = setInterval(() => {
-                // Create a new oscillator for each tick
-                const oscillator = audioContext.createOscillator();
-                oscillator.type = 'square'; // Adjust as needed
-                oscillator.connect(audioContext.destination);
-                oscillator.start();
+            var beatsCalled = 0;
+            metronomeId = setInterval(() => {
+                if (isMetronomeOn) {
+                    // Create a new oscillator for each tick
+                    const oscillator = audioContext.createOscillator();
+                    oscillator.type = 'square'; // Adjust as needed
+                    oscillator.connect(audioContext.destination);
+                    oscillator.start();
 
-                // Schedule the oscillator to stop after a short duration
-                oscillator.stop(audioContext.currentTime + 0.1); // Adjust the duration as needed
+                    // Schedule the oscillator to stop after a short duration
+                    oscillator.stop(audioContext.currentTime + 0.1); // Adjust the duration as needed
+                }
+
+                // If this is the first beat, find the next measure and initiate a
+                // hide transition
+
+
+                // If this is the last beat, go back to 0!
+                if (++beatsCalled === 3) {
+                    clearInterval(metronomeId);
+                    beatsCalled = 0;
+                }
             }, tickDuration);
         }
 
         // Cleanup
         return () => {
-            if(animation) {
-                animation.kill();
-            }
-            clearInterval(intervalId);
+            clearInterval(metronomeId);
             // Close the AudioContext when cleaning up
             if (audioContext) {
                 audioContext.close();
             }
         };
-    }, [isPlaying, isMetronomeOn, allMeasuresByCanvas]);
-
-    const hideNextMeasure = (rect, bpm, numerator, denominator) => {
-        // Implement animated gradient blur to hide the next measure
-        // ...
-
-        // After hiding the last measure, stop the animation
-        if (false/* Check if all measures are hidden */) {
-            clearInterval(animationRef.current);
-            setIsPlaying(false); // Set to Stop state
-        }
-    };
+    }, [isPlaying, isMetronomeOn, bpm]);
 
     const handleMeasureClick = async (divElement, event) => {
-        // If we're already playing, clicking anywhere stops the app.
-        if (isPlaying) {
-            setIsPlaying(!isPlaying);
-            return;
-        }
-
-        // The click is within this measure, you can perform your actions here
         console.log(`Clicked a measure!`);
-
-//        // Start the animation
-//        const duration = (60 / bpmRef.current) * 1000;  // This should be in milliseconds?
-//        animationRef.current = setInterval(() => {
-//            // Hide measures sequentially
-//            hideNextMeasure(canvasIndex, measureIndex);
-//
-//            // Is there a next measure?
-//            if (measureIndex === measures.length - 1) {
-//                // Stop for now, don't go on to the next page.
-//                clearInterval(animationRef.current);
-//            }
-//        }, duration / 4.0); // TODO: This only works for 4/4 time
-//
-//        // Toggle the Play/Stop state
-//        nextMeasureRef.current = measureIndex;
-//        nextCanvasRef.current = canvasIndex;
-//        setIsPlaying(true);
+        setIsPlaying(!isPlaying);
     };
 
     const handleFileUpload = async (event) => {
@@ -234,6 +106,9 @@ const App = () => {
         }
     };
 
+    ////////////////////////////////////////////////////////////////////////////////
+    // Use the pdfjs library to convert a PDF to a set of PNGs
+    ////////////////////////////////////////////////////////////////////////////////
     const convertPdfToPng = async (file) => {
         const fileReader = new FileReader();
 
@@ -277,6 +152,40 @@ const App = () => {
         });
     };
 
+    const renderMeasures = (canvasIndex) => {
+        // This can happen legitimately on an empty page, for example.
+        if (!allMeasuresByCanvas[canvasIndex]) {
+            return;
+        }
+
+        return allMeasuresByCanvas[canvasIndex].map((measure, index) => (
+            <div
+            key={index}
+            className="measure"
+            onClick={(event) => handleMeasureClick(this, event)}
+            style={{
+                position: 'absolute',
+                left: measure.x,
+                top: measure.y,
+                width: measure.width,
+                height: measure.height,
+                background: 'rgba(255, 0, 255, 0.15)',
+                border: '0px solid red',
+                fontSize: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                "--transition-time": 4*60/bpm * 2/4 + "s",
+                "--transition-time-delay": 4*60/bpm * 1/4 + "s",
+            }}
+            >
+            <div className="measure-text">
+            {/*index + 1*/}
+            </div>
+            </div>
+        ));
+    };
+
     return (
         <div className="App">
           <header className="App-header">
@@ -289,8 +198,8 @@ const App = () => {
                   {isMetronomeOn ? 'ON' : 'OFF'}
                 </span>
               </label>
-                <input type="range" min="40" max="240" value={bpmRef.current} onChange={(e) => (bpmRef.current = e.target.value)} disabled={!isMetronomeOn} />
-                {bpmRef.current} BPM
+                <input type="range" min="40" max="240" value={bpm} onChange={(e) => (setBpm(e.target.value))} disabled={!isMetronomeOn} />
+                {bpm} BPM
             </div>
             <div className="UploadSection">
               <input type="file" onChange={handleFileUpload} accept="application/pdf" />
