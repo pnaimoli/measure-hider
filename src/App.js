@@ -55,12 +55,18 @@ const App = () => {
                 if (isMetronomeOn) {
                     // Create a new oscillator for each tick
                     const oscillator = audioContext.createOscillator();
+                    if (beatsCalled === 0) {
+                        // For the 0th beat, set the higher pitch frequency
+                        oscillator.frequency.setValueAtTime(660, audioContext.currentTime);
+                    } else {
+                        oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+                    }
                     oscillator.type = 'square'; // Adjust as needed
                     oscillator.connect(audioContext.destination);
                     oscillator.start();
 
                     // Schedule the oscillator to stop after a short duration
-                    oscillator.stop(audioContext.currentTime + 0.1); // Adjust the duration as needed
+                    oscillator.stop(audioContext.currentTime + 0.05); // Adjust the duration as needed
                 }
 
                 // If this is the first beat, find the next measure and initiate a
