@@ -1,70 +1,88 @@
-# Getting Started with Create React App
+# Measure Hider
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A web application for hiding measures as you play along to sheet music.
 
-## Available Scripts
+## Table of Contents
 
-In the project directory, you can run:
+- [About](#about)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+- [Demo](#demo)
+- [License](#license)
 
-### `npm start`
+## About
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Measure Hider is a web application designed for musicians to enhance their sight-reading skills by providing an interactive and unique way to play along with sheet music. With Measure Hider, you can upload your own PDF sheet music, and the application will automatically detect and divide the music into individual measures. It offers a one-of-a-kind learning experience that focuses on improving your lookahead skills while sight-reading.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+**Key Features:**
 
-### `npm test`
+- **Hide Measures:** Measure Hider allows you to hide specific measures of the sheet music as you play along. This feature encourages you to read ahead and anticipate upcoming notes and rhythms, a crucial skill for sight-reading.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **PDF Upload:** Easily upload your own sheet music in PDF format. The application's automated measure detection ensures that your music is accurately divided into measures for interactive control.
 
-### `npm run build`
+- **Enhanced Learning:** The animated transitions and dynamic interface of Measure Hider make practicing and learning music more engaging and enjoyable.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+**Why Measure Hider Is Useful:**
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **Sight-Reading Improvement:** Measure Hider's unique approach to hiding measures challenges you to read ahead while playing, a skill that is essential for sight-reading music accurately.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- **Customizable Practice:** Tailor your practice sessions by selecting which measures to hide or reveal. Focus on the sections that need improvement and gradually increase the difficulty as you progress.
 
-### `npm run eject`
+- **No Similar Tool:** As of now, there are no comparable tools available on the internet that offer the same combination of automatic measure detection, PDF support, and interactive measure hiding.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Discover a new way to practice and improve your sight-reading skills with Measure Hider.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Getting Started
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Prerequisites
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+List any prerequisites or dependencies that need to be installed before someone can use your project. For example:
 
-## Learn More
+- Node.js
+- npm
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Installation
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Provide step-by-step instructions on how to install and set up your project. Make it clear and easy to follow:
 
-### Code Splitting
+1. Clone the repository:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+   \```bash
+   git clone https://github.com/yourusername/your-project.git
+   \```
 
-### Analyzing the Bundle Size
+2. Change to the project directory:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+   \```bash
+   cd your-project
+   \```
 
-### Making a Progressive Web App
+3. Install dependencies:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+   \```bash
+   npm install
+   \```
 
-### Advanced Configuration
+## Usage
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Start the development server:
 
-### Deployment
+    \```bash
+    npm start
+    \```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+This will launch the Measure Hider web application on your local server.
+Open your web browser and go to http://localhost:3000 to access Measure Hider.
+Click the "Upload Music" button to select and upload your PDF sheet music.
+The application will automatically detect and divide your sheet music into individual measures.
+You can now interact with the sheet music by clicking on measures to hide or reveal them. Use this feature to challenge yourself and improve your sight-reading skills.
 
-### `npm run build` fails to minify
+## Demo
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Explore a live demo of Measure Hider on GitHub Pages. Upload your own sheet music and start enhancing your sight-reading skills today!
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
