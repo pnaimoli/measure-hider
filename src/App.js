@@ -49,6 +49,7 @@ const App = () => {
             // Calculate tick duration and metronome logic here
             const tickDuration = (60 / bpm) * 1000; // Duration in milliseconds
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioContext.resume(); // Safari doesn't play anything without this.
 
             var beatsCalled = 0;
             metronomeId = setInterval(() => {
