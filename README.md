@@ -49,29 +49,29 @@ Provide step-by-step instructions on how to install and set up your project. Mak
 
 1. Clone the repository:
 
-   \```bash
+   ```bash
    git clone https://github.com/yourusername/your-project.git
-   \```
+   ```
 
 2. Change to the project directory:
 
-   \```bash
+   ```bash
    cd your-project
-   \```
+   ```
 
 3. Install dependencies:
 
-   \```bash
+   ```bash
    npm install
-   \```
+   ```
 
 ## Usage
 
 Start the development server:
 
-    \```bash
+    ```bash
     npm start
-    \```
+    ```
 
 This will launch the Measure Hider web application on your local server.
 Open your web browser and go to http://localhost:3000 to access Measure Hider.
