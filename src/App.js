@@ -1,37 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+import SheetMusic from './SheetMusic'
 import sheetMusicLogo from './sheet-music-logo.png';
 
-import { detectMeasures } from './measureDetection';
-import * as pdfjs from 'pdfjs-dist'
-import * as pdfjsWorker from 'pdfjs-dist/build/pdf.worker';
-pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker
-
 const App = () => {
-    const [images, setImages] = useState([]);
+    const sheetMusicRef = useRef(null);
+    const [uploadedFile, setUploadedFile] = useState(null);
     const [isMetronomeOn, setIsMetronomeOn] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false); // Added state for Play/Stop
     const [bpm, setBpm] = useState(60); // Default BPM
-    const [allMeasuresByCanvas, setAllMeasuresByCanvas] = useState({}); // Changed to useState
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Once the images are loaded, detect the measures
-    ////////////////////////////////////////////////////////////////////////////////
-    useEffect(() => {
-        images.forEach((dataUrl, index) => {
-            const img = new Image();
-            img.onload = () => {
-                const allMeasures = detectMeasures(img, index);
-
-                // Update the state with allMeasures for this canvas index
-                setAllMeasuresByCanvas((prevState) => ({
-                    ...prevState,
-                    [index]: allMeasures,
-                }));
-            };
-            img.src = dataUrl;
-        });
-    }, [images]);
 
     ////////////////////////////////////////////////////////////////////////////////
     // This is the main function that handles playing the metronome
@@ -73,32 +50,8 @@ const App = () => {
                 // If this is the first beat, find the next measure and initiate a
                 // hide transition
                 if (beatsCalled === 0) {
-                    const clickedMeasure = document.querySelector('.measure[data-clicked="true"]');
-                    if (clickedMeasure) {
-                        const unplayedMeasures = document.querySelectorAll('.measure:not(.played)');
-
-                        let nextMeasure;
-                        for (let i = 0; i < unplayedMeasures.length; i++) {
-                            // Check if unplayedMeasures appears after the clickedMeasure
-                            const unplayedMeasure = unplayedMeasures[i];
-                            const position = clickedMeasure.compareDocumentPosition(unplayedMeasure);
-
-                            // Check if unplayedMeasure appears after clickedMeasure
-                            if (unplayedMeasure === clickedMeasure || position & Node.DOCUMENT_POSITION_FOLLOWING) {
-                                // This means unplayedMeasure appears after clickedMeasure
-                                nextMeasure = unplayedMeasure;
-                                break; // Stop after the first unplayed measure found after clickedMeasure
-                            }
-                        }
-                        if (!nextMeasure) {
-                            // If there are no more unplayed measures, stop!
-                            setIsPlaying(false);
-                        } else {
-                            nextMeasure.classList.add('played');
-                        }
-                    } else {
-                        console.log('No measures have been clicked yet.');
-                    }
+                    if (!sheetMusicRef.current.hideNextMeasure())
+                        setIsPlaying(false);
                 }
 
                 if (beatsCalled === 3) {
@@ -128,118 +81,14 @@ const App = () => {
         };
     }, [isPlaying, isMetronomeOn, bpm]);
 
-    const handleMeasureClick = async (divElement, event) => {
+    const handleFileUpload = (event) => {
+        setIsPlaying(false);
+        setUploadedFile(event.target.files[0]);
+    };
+
+    const handleMeasureClick = (event) => {
         console.log(`Clicked a measure!`);
         setIsPlaying(!isPlaying);
-
-        // Remove the "clicked" attribute from all measures
-        const allMeasures = document.querySelectorAll('.measure');
-        allMeasures.forEach((measure) => {
-            measure.removeAttribute('data-clicked');
-        });
-
-        // Add the "clicked" attribute to the clicked measure
-        const clickedMeasure = event.currentTarget;
-        clickedMeasure.setAttribute('data-clicked', 'true');
-    };
-
-    const handleFileUpload = async (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            // Clear the allMeasuresByCanvas state when a new file is loaded
-            setAllMeasuresByCanvas({});
-            setIsPlaying(false);
-
-            try {
-                const pngImages = await convertPdfToPng(file);
-                setImages(pngImages);
-            } catch (error) {
-                console.error("Error converting PDF to PNG: ", error);
-            }
-        }
-    };
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Use the pdfjs library to convert a PDF to a set of PNGs
-    ////////////////////////////////////////////////////////////////////////////////
-    const convertPdfToPng = async (file) => {
-        const fileReader = new FileReader();
-
-        return new Promise((resolve, reject) => {
-            fileReader.onload = async (event) => {
-                const arrayBuffer = event.target.result;
-                try {
-                    const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
-                    const pdf = await loadingTask.promise;
-
-                    const pageNum = pdf.numPages;
-                    const images = [];
-
-                    for (let page = 1; page <= pageNum; page++) {
-                        const pdfPage = await pdf.getPage(page);
-                        const viewport = pdfPage.getViewport({ scale: 1.5 });
-                        const canvas = document.createElement('canvas');
-                        canvas.height = viewport.height;
-                        canvas.width = viewport.width;
-
-                        const renderContext = {
-                            canvasContext: canvas.getContext('2d'),
-                            viewport: viewport,
-                        };
-
-                        await pdfPage.render(renderContext).promise;
-                        images.push(canvas.toDataURL('image/png'));
-                    }
-
-                    resolve(images);
-                } catch (error) {
-                    reject(error);
-                }
-            };
-
-            fileReader.onerror = (error) => {
-                reject(error);
-            };
-
-            fileReader.readAsArrayBuffer(file);
-        });
-    };
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Start rendering our elements
-    ////////////////////////////////////////////////////////////////////////////////
-    const renderMeasures = (canvasIndex) => {
-        // This can happen legitimately on an empty page, for example.
-        if (!allMeasuresByCanvas[canvasIndex]) {
-            return;
-        }
-
-        return allMeasuresByCanvas[canvasIndex].map((measure, index) => (
-            <div
-            key={index}
-            className="measure"
-            onClick={(event) => handleMeasureClick(this, event)}
-            style={{
-                position: 'absolute',
-                left: measure.x,
-                top: measure.y,
-                width: measure.width,
-                height: measure.height,
-                background: 'rgba(255, 0, 255, 0.15)',
-                border: '0px solid red',
-                fontSize: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                "--transition-time": 4*60/bpm * 2/4 + "s",
-                "--transition-time-delay": 4*60/bpm * 1/4 + "s",
-            }}
-            >
-            <div className="measure-text">
-            {/*index + 1*/}
-            </div>
-            </div>
-        ));
     };
 
     return (
@@ -261,15 +110,7 @@ const App = () => {
               <input type="file" onChange={handleFileUpload} accept="application/pdf" />
             </div>
           </header>
-          <div>
-          {images.map((imgSrc, index) => (
-            <div key={index} className="MusicPage">
-              <img src={imgSrc} alt={`Page ${index + 1}`} style={{ display: 'block' }} />
-              {renderMeasures(index)}
-            </div>
-          ))}
-          </div>
-          {/* Rest of your component */}
+          <SheetMusic key={uploadedFile ? uploadedFile.name : null} uploadedFile={uploadedFile} bpm={bpm} ref={sheetMusicRef} onMeasureClick={handleMeasureClick} />
         </div>
     );
 };
