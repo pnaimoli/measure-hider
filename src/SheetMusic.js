@@ -114,49 +114,49 @@ class SheetMusic extends Component {
     }
 
     handleMeasureClick(divElement, event) {
-    }
-//    const handleMeasureClick = (divElement, event) => {
-//        // Remove the "clicked" attribute from all measures
-//        const allMeasures = document.querySelectorAll('.measure');
-//        allMeasures.forEach((measure) => {
-//            measure.removeAttribute('data-clicked');
-//        });
-//
-//        // Add the "clicked" attribute to the clicked measure
-//        const clickedMeasure = event.currentTarget;
-//        clickedMeasure.setAttribute('data-clicked', 'true');
-//    };
+        // Remove the "clicked" attribute from all measures
+        const allMeasures = document.querySelectorAll('.measure');
+        allMeasures.forEach((measure) => {
+            measure.removeAttribute('data-clicked');
+        });
 
-//    const hideNextMeasure = () => {
-//        const clickedMeasure = document.querySelector('.measure[data-clicked="true"]');
-//        if (clickedMeasure) {
-//            const unplayedMeasures = document.querySelectorAll('.measure:not(.played)');
-//
-//            let nextMeasure;
-//            for (let i = 0; i < unplayedMeasures.length; i++) {
-//                // Check if unplayedMeasures appears after the clickedMeasure
-//                const unplayedMeasure = unplayedMeasures[i];
-//                const position = clickedMeasure.compareDocumentPosition(unplayedMeasure);
-//
-//                // Check if unplayedMeasure appears after clickedMeasure
-//                if (unplayedMeasure === clickedMeasure || position & Node.DOCUMENT_POSITION_FOLLOWING) {
-//                    // This means unplayedMeasure appears after clickedMeasure
-//                    nextMeasure = unplayedMeasure;
-//                    break; // Stop after the first unplayed measure found after clickedMeasure
-//                }
-//            }
-//            if (!nextMeasure) {
-//                // If there are no more unplayed measures, stop!
-//                return false;
-//            } else {
-//                nextMeasure.classList.add('played');
-//                return true;
-//            }
-//        } else {
-//            console.log('No measures have been clicked yet.');
-//        }
-//        return false;
-//    };
+        // Add the "clicked" attribute to the clicked measure
+        const clickedMeasure = event.currentTarget;
+        clickedMeasure.setAttribute('data-clicked', 'true');
+
+        this.props.onMeasureClick(event);
+    }
+
+    hideNextMeasure() {
+        const clickedMeasure = document.querySelector('.measure[data-clicked="true"]');
+        if (clickedMeasure) {
+            const unplayedMeasures = document.querySelectorAll('.measure:not(.played)');
+
+            let nextMeasure;
+            for (let i = 0; i < unplayedMeasures.length; i++) {
+                // Check if unplayedMeasures appears after the clickedMeasure
+                const unplayedMeasure = unplayedMeasures[i];
+                const position = clickedMeasure.compareDocumentPosition(unplayedMeasure);
+
+                // Check if unplayedMeasure appears after clickedMeasure
+                if (unplayedMeasure === clickedMeasure || position & Node.DOCUMENT_POSITION_FOLLOWING) {
+                    // This means unplayedMeasure appears after clickedMeasure
+                    nextMeasure = unplayedMeasure;
+                    break; // Stop after the first unplayed measure found after clickedMeasure
+                }
+            }
+            if (!nextMeasure) {
+                // If there are no more unplayed measures, stop!
+                return false;
+            } else {
+                nextMeasure.classList.add('played');
+                return true;
+            }
+        } else {
+            console.log('No measures have been clicked yet.');
+        }
+        return false;
+    }
 
     // A reusable method to update an array in the state
     // There has to be a better way than this
