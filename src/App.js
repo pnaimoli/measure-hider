@@ -61,13 +61,6 @@ const App = () => {
                     beatsCalled++;
                 }
             }, tickDuration);
-        } else {
-            // Remove the "played" class from any played measures
-            const playedMeasures = document.querySelectorAll('.measure.played');
-            for (let i = 0; i < playedMeasures.length; i++) {
-                const measure = playedMeasures[i];
-                measure.classList.remove('played');
-            }
         }
 
         // Cleanup
@@ -87,7 +80,6 @@ const App = () => {
     };
 
     const handleMeasureClick = (event) => {
-        console.log(`Clicked a measure!`);
         setIsPlaying(!isPlaying);
     };
 

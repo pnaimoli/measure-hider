@@ -12,6 +12,8 @@ class SheetMusic extends Component {
             pageImages: [],
             deskewedImages: [],
             measureRects: [],
+            measureClicked: null,
+            currentHiddenMeasure: null,
         };
     }
 
@@ -21,8 +23,6 @@ class SheetMusic extends Component {
         console.log('  ' + JSON.stringify(this.state));
 
         if (this.props.uploadedFile) {
-          console.log(`Uploading ${this.props.uploadedFile}`);
-
           this.convertPdfToPng(this.props.uploadedFile)
             .then(() => console.log('Conversion successful!'))
             .catch(error => console.error("Error converting PDF to PNG: ", error));
@@ -62,7 +62,7 @@ class SheetMusic extends Component {
                 const img = new Image();
                 img.onload = () => {
                     const measures = detectMeasures(img);
-                    this.updateStateArray('measureRects', pageIndex, measures);
+                    this.updateStateArray('measureRects', pageIndex, measures, []);
                 };
                 img.src = this.state.deskewedImages[pageIndex];
             }
@@ -113,54 +113,50 @@ class SheetMusic extends Component {
         });
     }
 
-    handleMeasureClick(divElement, event) {
-        // Remove the "clicked" attribute from all measures
-        const allMeasures = document.querySelectorAll('.measure');
-        allMeasures.forEach((measure) => {
-            measure.removeAttribute('data-clicked');
+    handleMeasureClick(divElement, pageIndex, measureIndex, event) {
+        // Update state with the clicked page and measure indices
+        this.setState({
+            measureClicked: [pageIndex, measureIndex],
+            currentHiddenMeasure: null,
         });
-
-        // Add the "clicked" attribute to the clicked measure
-        const clickedMeasure = event.currentTarget;
-        clickedMeasure.setAttribute('data-clicked', 'true');
 
         this.props.onMeasureClick(event);
     }
 
     hideNextMeasure() {
-        const clickedMeasure = document.querySelector('.measure[data-clicked="true"]');
-        if (clickedMeasure) {
-            const unplayedMeasures = document.querySelectorAll('.measure:not(.played)');
-
-            let nextMeasure;
-            for (let i = 0; i < unplayedMeasures.length; i++) {
-                // Check if unplayedMeasures appears after the clickedMeasure
-                const unplayedMeasure = unplayedMeasures[i];
-                const position = clickedMeasure.compareDocumentPosition(unplayedMeasure);
-
-                // Check if unplayedMeasure appears after clickedMeasure
-                if (unplayedMeasure === clickedMeasure || position & Node.DOCUMENT_POSITION_FOLLOWING) {
-                    // This means unplayedMeasure appears after clickedMeasure
-                    nextMeasure = unplayedMeasure;
-                    break; // Stop after the first unplayed measure found after clickedMeasure
-                }
-            }
-            if (!nextMeasure) {
-                // If there are no more unplayed measures, stop!
-                return false;
-            } else {
-                nextMeasure.classList.add('played');
-                return true;
-            }
-        } else {
-            console.log('No measures have been clicked yet.');
+        if (!this.state.measureClicked) {
+            console.error('No measures have been clicked yet.');
+            return false;
         }
-        return false;
+
+        let measure = this.state.currentHiddenMeasure;
+        if (!measure) {
+            // This is our first measure
+            measure = this.state.measureClicked;
+        } else {
+            // Find the next measure
+            const pageIndex = measure[0];
+            const measureIndex = measure[1];
+
+            if (measureIndex < this.state.measureRects[pageIndex].length - 1) {
+                // Increment the measure index
+                measure = [measure[0], measure[1] + 1];
+            } else if (pageIndex < this.state.measureRects.length - 1) {
+                // Increment the page index and reset the measure index
+                measure = [measure[0] + 1, 0];
+            } else {
+                // Out of bounds
+                return false;
+            }
+        }
+
+        this.setState({currentHiddenMeasure: measure});
+        return true;
     }
 
     // A reusable method to update an array in the state
     // There has to be a better way than this
-    updateStateArray = (arrayName, pageIndex, newValue) => {
+    updateStateArray = (arrayName, pageIndex, newValue, defaultValue = null) => {
         this.setState(prevState => {
             // Copy the current array from the state
             const updatedArray = [...prevState[arrayName]];
@@ -168,7 +164,7 @@ class SheetMusic extends Component {
             // Ensure the array has at least 'pageIndex + 1' elements
             if (updatedArray.length < pageIndex + 1) {
                 updatedArray.length = pageIndex + 1; // Resizes the array
-                updatedArray.fill(null, prevState[arrayName].length, pageIndex + 1); // Fill new slots with null
+                updatedArray.fill(defaultValue, prevState[arrayName].length, pageIndex + 1); // Fill new slots with null
             }
 
             // Update the value at the specified index
@@ -177,6 +173,28 @@ class SheetMusic extends Component {
             // Return the updated state
             return { [arrayName]: updatedArray };
         });
+    }
+
+    isMeasurePlayed(currentPageIndex, currentMeasureIndex) {
+        if (!this.state.measureClicked || !this.state.currentHiddenMeasure) {
+            return false;
+        }
+
+        const [clickedPageIndex, clickedMeasureIndex] = this.state.measureClicked;
+        const [hidePageIndex, hideMeasureIndex] = this.state.currentHiddenMeasure;
+
+        // Check if the current measure is within the range
+        if (currentPageIndex < clickedPageIndex || currentPageIndex > hidePageIndex) {
+            return false;
+        } else if (currentPageIndex === clickedPageIndex && currentPageIndex === hidePageIndex) {
+            return currentMeasureIndex >= clickedMeasureIndex && currentMeasureIndex <= hideMeasureIndex;
+        } else if (currentPageIndex === clickedPageIndex) {
+            return currentMeasureIndex >= clickedMeasureIndex;
+        } else if (currentPageIndex === hidePageIndex) {
+            return currentMeasureIndex <= hideMeasureIndex;
+        }
+
+        return true;
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -194,11 +212,15 @@ class SheetMusic extends Component {
             return;
         }
 
-        return measures.map((measure, measureIndex) => (
+        return measures.map((measure, measureIndex) => {
+            // Determine if the current measure should have the "played" class
+            const isPlayed = this.isMeasurePlayed(pageIndex, measureIndex);
+
+            return (
             <div
             key={measureIndex}
-            className="measure"
-            onClick={(event) => this.handleMeasureClick(this, event)}
+            className={`measure ${isPlayed ? 'played' : ''}`}
+            onClick={(event) => this.handleMeasureClick(this, pageIndex, measureIndex, event)}
             style={{
                 position: 'absolute',
                 left: measure.x,
@@ -219,7 +241,8 @@ class SheetMusic extends Component {
             {measureIndex + 1}
             </div>
             </div>
-        ));
+            );
+        });
     }
 
     render() {
