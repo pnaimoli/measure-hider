@@ -14,6 +14,7 @@ class SheetMusic extends Component {
             measureRects: [],
             measureClicked: null,
             currentHiddenMeasure: null,
+            analyzedPages: new Set(),
         };
     }
 
@@ -53,20 +54,20 @@ class SheetMusic extends Component {
             }
         }
 
-        // Detect Measures
-        if (this.state.deskewedImages !== prevState.deskewedImages) {
-            for (let pageIndex = this.state.measureRects.length;
-                 pageIndex < this.state.deskewedImages.length;
-                 ++pageIndex) {
-
-                const img = new Image();
-                img.onload = () => {
-                    const measures = detectMeasures(img);
-                    this.updateStateArray('measureRects', pageIndex, measures, []);
-                };
-                img.src = this.state.deskewedImages[pageIndex];
-            }
-        }
+//        // Detect Measures
+//        if (this.state.deskewedImages !== prevState.deskewedImages) {
+//            for (let pageIndex = this.state.measureRects.length;
+//                 pageIndex < this.state.deskewedImages.length;
+//                 ++pageIndex) {
+//
+//                const img = new Image();
+//                img.onload = () => {
+//                    const measures = detectMeasures(img);
+//                    this.updateStateArray('measureRects', pageIndex, measures, []);
+//                };
+//                img.src = this.state.deskewedImages[pageIndex];
+//            }
+//        }
 
     }
 
@@ -121,6 +122,19 @@ class SheetMusic extends Component {
         });
 
         this.props.onMeasureClick(event);
+    }
+
+    handleAnalyzeClick(pageIndex) {
+        this.setState(prevState => ({
+            analyzedPages: new Set(prevState.analyzedPages).add(pageIndex)
+        }), () => {
+            const img = new Image();
+            img.onload = () => {
+                const measures = detectMeasures(img);
+                this.updateStateArray('measureRects', pageIndex, measures, []);
+            };
+            img.src = this.state.deskewedImages[pageIndex];
+        });
     }
 
     hideNextMeasure() {
@@ -238,11 +252,25 @@ class SheetMusic extends Component {
             }}
             >
             <div className="measure-text">
-            {measureIndex + 1}
+            {/*measureIndex + 1*/}
             </div>
             </div>
             );
         });
+    }
+
+    renderAnalyzeButton(pageIndex) {
+        if (!this.state.analyzedPages.has(pageIndex)) {
+            return (
+                <button
+                    style={{ position: 'absolute', left: 0, top: 0 }}
+                    onClick={() => this.handleAnalyzeClick(pageIndex)}
+                >
+                    Analyze
+                </button>
+            );
+        }
+        return null;
     }
 
     render() {
@@ -250,6 +278,7 @@ class SheetMusic extends Component {
             <div>
                 {this.state.deskewedImages.map((dataUrl, pageIndex) => (
                 <div key={pageIndex} className="MusicPage">
+                  {this.renderAnalyzeButton(pageIndex)}
                   <img src={dataUrl} alt={`Page ${pageIndex + 1}`} style={{ display: 'block' }} />
                   {this.renderMeasures(pageIndex)}
                 </div>
