@@ -4,25 +4,35 @@
 
 .App-header {
   background-color: #282c34;
-  min-height: 100px;
   display: flex;
   align-items: center;
   justify-content: left;
   color: white;
   width: 100%;
+  height: 100px;;
+  position: fixed;
+  top: 0;
+  z-index: 999;
+  transition: height 0.3s;
+}
+
+.App-header.shrink {
+  height: 30px;
 }
 
 .App-content {
-  display: flex;
   align-items: center;
   justify-content: space-around;
   width: 100%;
+  padding-top: 100px; /* Adjust this value to match the height of your header */
 }
 
 .SheetMusicLogo {
   filter: invert(100%); /* Invert colors */
-  height: 80px; /* Adjust as needed */
+  height: 100%; /* Adjust as needed */
+  max-height: 80px;
   margin: 20px;
+  width: auto;
 }
 
 .MetronomeSettings label {
@@ -41,37 +51,4 @@
 
 .UploadSection {
   margin-left: 20px; /* Added margin for spacing */
-}
-
-.MusicPage {
-  position: relative;
-}
-
-.measure {
-  position: relative;
-}
-
-.measure::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0; /* Initially, no width */
-  height: 100%;
-  background: linear-gradient(to left, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1)); /* Semi-transparent gradient to white */
-  pointer-events: none; /* Allow clicks to pass through */
-}
-
-/* .measure:hover::before, */
-.measure.played::before {
-  width: 100%; /* On hover, fill the width to 100% */
-  background-color: white; /* Color to fill the div */
-  transition: var(--transition-time) ease-in-out; /* Transition width property */
-  transition-delay: var(--transition-time-delay);
-}
-
-.measure-text {
-  position: absolute;
-  top: -30px; /* Adjust this value to control the vertical position */
-  left: 0px;
 }

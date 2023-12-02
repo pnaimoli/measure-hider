@@ -1,0 +1,32 @@
+.MusicPage {
+  position: relative;
+}
+
+.measure {
+  position: relative;
+}
+
+.measure::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0; /* Initially, no width */
+  height: 100%;
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1)); /* Semi-transparent gradient to white */
+  pointer-events: none; /* Allow clicks to pass through */
+}
+
+/* .measure:hover::before, */
+.measure.played::before {
+  width: 100%; /* On hover, fill the width to 100% */
+  background-color: white; /* Color to fill the div */
+  transition: var(--transition-time) ease-in-out; /* Transition width property */
+  transition-delay: var(--transition-time-delay);
+}
+
+.measure-text {
+  position: absolute;
+  top: -30px; /* Adjust this value to control the vertical position */
+  left: 0px;
+}

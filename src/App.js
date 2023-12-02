@@ -9,6 +9,20 @@ const App = () => {
     const [isMetronomeOn, setIsMetronomeOn] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false); // Added state for Play/Stop
     const [bpm, setBpm] = useState(60); // Default BPM
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const offset = window.scrollY;
+            setIsScrolled(offset > 50); // Set true if scrolled more than 50px
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
 
     ////////////////////////////////////////////////////////////////////////////////
     // This is the main function that handles playing the metronome
@@ -85,7 +99,7 @@ const App = () => {
 
     return (
         <div className="App">
-          <header className="App-header">
+          <header className={`App-header ${isScrolled ? 'shrink' : ''}`}>
             <img src={sheetMusicLogo} alt="Sheet Music" className="SheetMusicLogo" />
             <div className="MetronomeSettings">
               <label>
@@ -102,7 +116,9 @@ const App = () => {
               <input type="file" onChange={handleFileUpload} accept="application/pdf" />
             </div>
           </header>
-          <SheetMusic key={uploadedFile ? uploadedFile.name : null} uploadedFile={uploadedFile} bpm={bpm} ref={sheetMusicRef} onMeasureClick={handleMeasureClick} />
+          <div className="App-content">
+            <SheetMusic key={uploadedFile ? uploadedFile.name : null} uploadedFile={uploadedFile} bpm={bpm} ref={sheetMusicRef} onMeasureClick={handleMeasureClick} />
+          </div>
         </div>
     );
 };

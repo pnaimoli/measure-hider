@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import './SheetMusic.css';
 import { detectMeasures, deskew } from './measureDetection';
 
 import * as pdfjs from 'pdfjs-dist'
@@ -19,26 +20,17 @@ class SheetMusic extends Component {
     }
 
     componentDidMount() {
-        console.log('SheetMusic component mounted:');
-        console.log('  ' + JSON.stringify(this.props));
-        console.log('  ' + JSON.stringify(this.state));
-
         if (this.props.uploadedFile) {
           this.convertPdfToPng(this.props.uploadedFile)
-            .then(() => console.log('Conversion successful!'))
+            .then()
             .catch(error => console.error("Error converting PDF to PNG: ", error));
         }
     }
 
     componentWillUnmount() {
-        console.log('SheetMusic component unmounted');
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.props.bpm !== prevProps.bpm) {
-            console.log('BPM Changed!');
-        }
-
         // Deskew
         if (this.state.pageImages !== prevState.pageImages) {
             for (let pageIndex = this.state.deskewedImages.length;
@@ -263,7 +255,7 @@ class SheetMusic extends Component {
         if (!this.state.analyzedPages.has(pageIndex)) {
             return (
                 <button
-                    style={{ position: 'absolute', left: 0, top: 0 }}
+                    style={{ position: 'absolute', left: 5, top: 5 }}
                     onClick={() => this.handleAnalyzeClick(pageIndex)}
                 >
                     Analyze
