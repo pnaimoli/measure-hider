@@ -2,7 +2,9 @@ import * as ort from 'onnxruntime-web';
 
 export function detectMeasuresOnnx(imageElement) {
     // Create an ONNX session
-    return ort.InferenceSession.create('./model.RCNN.12.onnx')
+    const model_path = `${process.env.PUBLIC_URL}/model.RCNN.12.onnx`;
+
+    return ort.InferenceSession.create(model_path)
         .then(session => {
             // Preprocess the image to the format your model expects
             const preprocessedImage = preprocessImageForOnnx(imageElement);
@@ -11,7 +13,11 @@ export function detectMeasuresOnnx(imageElement) {
             const inputTensor = new ort.Tensor('float32', preprocessedImage.data, preprocessedImage.dims);
 
             // Run the model
-            return session.run({ 'images': inputTensor });
+            return session.run({ 'images': inputTensor })
+                .catch(error => {
+                    console.error('Error occurred during model run:', error);
+                    throw error; // Re-throw the error to handle it in the next catch block
+                });
         })
         .then(output => {
             // Process the output to extract bounding boxes
@@ -34,6 +40,11 @@ export function detectMeasuresOnnx(imageElement) {
             });
 
             return boundingBoxes;
+        })
+        .catch(error => {
+            // Handle any errors that occurred during the model loading or preprocessing
+            console.error('Error occurred during ONNX model loading or preprocessing:', error);
+            // Consider how to handle the error here - rethrow, return a default value, etc.
         });
 }
 
