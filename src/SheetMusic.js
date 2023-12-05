@@ -45,22 +45,6 @@ class SheetMusic extends Component {
                 img.src = this.state.pageImages[pageIndex];
             }
         }
-
-//        // Detect Measures
-//        if (this.state.deskewedImages !== prevState.deskewedImages) {
-//            for (let pageIndex = this.state.measureRects.length;
-//                 pageIndex < this.state.deskewedImages.length;
-//                 ++pageIndex) {
-//
-//                const img = new Image();
-//                img.onload = () => {
-//                    const measures = detectMeasures(img);
-//                    this.updateStateArray('measureRects', pageIndex, measures, []);
-//                };
-//                img.src = this.state.deskewedImages[pageIndex];
-//            }
-//        }
-
     }
 
     convertPdfToPng(file) {
