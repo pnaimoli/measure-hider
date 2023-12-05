@@ -79,6 +79,15 @@ Click the "Upload Music" button to select and upload your PDF sheet music.
 The application will automatically detect and divide your sheet music into individual measures.
 You can now interact with the sheet music by clicking on measures to hide or reveal them. Use this feature to challenge yourself and improve your sight-reading skills.
 
+### Issues
+
+I had to manually copy wasm files to my public directory to get this to work:
+
+   ```bash
+   mkdir -r public/static/js
+   cp node_modules/onnxruntime-web/dist/*.wasm public/static/js
+   ```
+
 ## Demo
 
 Explore a live demo of Measure Hider on GitHub Pages. Upload your own sheet music and start enhancing your sight-reading skills today!
