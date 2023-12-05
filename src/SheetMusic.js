@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './SheetMusic.css';
-import { detectMeasures, detectMeasuresOnnx, deskew } from './measureDetection';
+import { detectMeasuresOnnx, deskew } from './measureDetection';
 
 import * as pdfjs from 'pdfjs-dist'
 import * as pdfjsWorker from 'pdfjs-dist/build/pdf.worker';
@@ -133,6 +133,16 @@ class SheetMusic extends Component {
         });
     }
 
+    handleDeleteMeasure = (pageIndex, measureIndex, event) => {
+        event.stopPropagation(); // Prevents the event from bubbling up to parent elements
+
+        this.setState(prevState => {
+            const updatedMeasureRects = [...prevState.measureRects];
+            updatedMeasureRects[pageIndex] = updatedMeasureRects[pageIndex].filter((_, index) => index !== measureIndex);
+            return { measureRects: updatedMeasureRects };
+        });
+    };
+
     hideNextMeasure() {
         if (!this.state.measureClicked) {
             console.error('No measures have been clicked yet.');
@@ -247,9 +257,12 @@ class SheetMusic extends Component {
                 "--transition-time-delay": 4*60/this.props.bpm * 1/4 + "s",
             }}
             >
-            <div className="measure-text">
-            {/*measureIndex + 1*/}
-            </div>
+                <div className="measure-delete-btn" onClick={(event) => this.handleDeleteMeasure(pageIndex, measureIndex, event)}>
+                    &#10006;
+                </div>
+                <div className="measure-text">
+                {/*measureIndex + 1*/}
+                </div>
             </div>
             );
         });
