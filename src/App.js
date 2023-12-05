@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import SheetMusic from './SheetMusic'
 import sheetMusicLogo from './sheet-music-logo.png';
+import packageInfo from '../package.json';
 
 const App = () => {
     const sheetMusicRef = useRef(null);
@@ -100,6 +101,10 @@ const App = () => {
     return (
         <div className="App">
           <header className={`App-header ${isScrolled ? 'shrink' : ''}`}>
+            {/* Version Display */}
+            <div className="version-display">
+                Measure Hider {packageInfo.version}
+            </div>
             <img src={sheetMusicLogo} alt="Sheet Music" className="SheetMusicLogo" />
             <div className="MetronomeSettings">
               <label>
@@ -119,7 +124,7 @@ const App = () => {
           <div className="App-content">
             {!uploadedFile && (
             <div className="InstructionalContent">
-                <h2>Welcome to the Sheet Music App</h2>
+                <h2>Welcome to Measure Hider</h2>
                 <div className="Instructions">
                     <div className="InstructionStep">
                         <span className="Icon">📤</span>

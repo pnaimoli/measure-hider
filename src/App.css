@@ -2,6 +2,15 @@
   text-align: center;
 }
 
+.version-display {
+    position: fixed;
+    top: 10px; /* Adjust the top and right values as needed */
+    right: 10px;
+    font-size: 10px; /* Small font size */
+    color: #666; /* A subtle text color */
+    z-index: 1000; /* Ensures it stays on top of other elements */
+}
+
 .App-header {
   background-color: #282c34;
   display: flex;
