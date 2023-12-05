@@ -16,6 +16,22 @@ export async function detectMeasuresOnnx(imageElement) {
     // Process the output to extract bounding boxes
     const boundingBoxes = processOutputForOnnx(output);
 
+    // Function to determine if two y-coordinates are close enough
+    function areYCoordinatesClose(y1, y2, tolerance) {
+        return Math.abs(y1 - y2) <= tolerance;
+    }
+
+    // Function to sort bounding boxes
+    boundingBoxes.sort((a, b) => {
+        // First, sort by y-coordinate (top to bottom)
+        if (!areYCoordinatesClose(a.y, b.y, 10)) {
+            return a.y - b.y;
+        }
+
+        // If y-coordinates are close, sort by x-coordinate (left to right)
+        return a.x - b.x;
+    });
+
     return boundingBoxes;
 }
 
