@@ -15,7 +15,7 @@ class SheetMusic extends Component {
             measureRects: [],
             measureClicked: null,
             currentHiddenMeasure: null,
-            analyzedPages: new Set(),
+            analyzingPages: new Set(),
         };
     }
 
@@ -70,7 +70,7 @@ class SheetMusic extends Component {
             fileReader.onload = async (event) => {
                 const arrayBuffer = event.target.result;
                 try {
-                    const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
+                    const loadingTask = pdfjs.getDocument({ data: arrayBuffer, verbosity: pdfjs.VerbosityLevel.ERRORS });
                     const pdf = await loadingTask.promise;
 
                     const pageNum = pdf.numPages;
@@ -118,15 +118,17 @@ class SheetMusic extends Component {
 
     handleAnalyzeClick(pageIndex) {
         this.setState(prevState => ({
-            analyzedPages: new Set(prevState.analyzedPages).add(pageIndex)
+            analyzingPages: new Set(prevState.analyzingPages).add(pageIndex),
         }), () => {
             const img = new Image();
             img.onload = () => {
-//                const measures = detectMeasures(img);
-//                this.updateStateArray('measureRects', pageIndex, measures, []);
-
                 detectMeasuresOnnx(img).then(measures => {
                     this.updateStateArray('measureRects', pageIndex, measures, []);
+                    this.setState(prevState => {
+                        const updatedAnalyzingPages = new Set(prevState.analyzingPages);
+                        updatedAnalyzingPages.delete(pageIndex);
+                        return { analyzingPages: updatedAnalyzingPages };
+                    });
                 });
             };
             img.src = this.state.deskewedImages[pageIndex];
@@ -269,7 +271,15 @@ class SheetMusic extends Component {
     }
 
     renderAnalyzeButton(pageIndex) {
-        if (!this.state.analyzedPages.has(pageIndex)) {
+        const isAnalyzing = this.state.analyzingPages.has(pageIndex);
+
+        if (isAnalyzing) {
+            return (
+                <button className="analyze-button-disabled">
+                    Analyzing...
+                </button>
+            );
+        } else {
             return (
                 <button
                     style={{ position: 'absolute', left: 5, top: 5 }}
@@ -279,7 +289,6 @@ class SheetMusic extends Component {
                 </button>
             );
         }
-        return null;
     }
 
     render() {
