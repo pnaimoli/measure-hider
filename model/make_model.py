@@ -204,10 +204,10 @@ def test_model_on_image_onnx(epochs, image_path):
     image = image.astype(np.float32)
 
     # Convert image to numpy array and add batch dimension
-# Add a channel dimension and repeat the grayscale image across 3 channels
+    # Add a channel dimension and repeat the grayscale image across 3 channels
     image_3ch = np.repeat(image[:, :, np.newaxis], 3, axis=2)
 
-# Reorder dimensions to put the channel dimension second (1, 3, 1200, 1200)
+    # Reorder dimensions to put the channel dimension second (1, 3, 1200, 1200)
     image_np = np.transpose(image_3ch, (2, 0, 1))
     image_np = np.expand_dims(image_np, axis=0)
 
