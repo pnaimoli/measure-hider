@@ -1,3 +1,79 @@
+import * as ort from 'onnxruntime-web';
+
+export async function detectMeasuresOnnx(imageElement) {
+    // Create an ONNX session
+    const session = await ort.InferenceSession.create('/model.RCNN.12.onnx');
+
+    // Preprocess the image to the format your model expects
+    const preprocessedImage = preprocessImageForOnnx(imageElement);
+
+    // Create a tensor from the preprocessed image
+    const inputTensor = new ort.Tensor('float32', preprocessedImage.data, preprocessedImage.dims);
+
+    // Run the model
+    const output = await session.run({ 'images': inputTensor });
+
+    // Process the output to extract bounding boxes
+    const boundingBoxes = processOutputForOnnx(output);
+
+    return boundingBoxes;
+}
+
+function preprocessImageForOnnx(imageElement) {
+    // Convert the image to a Mat in OpenCV.js
+    let mat = window.cv.imread(imageElement);
+
+    // Convert to grayscale
+    window.cv.cvtColor(mat, mat, window.cv.COLOR_RGBA2GRAY);
+
+    // Create a new Mat for the padded image
+    let paddedMat = new window.cv.Mat(1200, 1200, window.cv.CV_8UC1, new window.cv.Scalar(0));
+    let roi = paddedMat.roi(new window.cv.Rect(0, 0, mat.cols, mat.rows));
+    mat.copyTo(roi);
+    roi.delete();
+    mat.delete();
+
+    // Convert the padded Mat to a Float32Array for ONNX
+    let tensorData = new Float32Array(1200 * 1200 * 3); // for 3 channels
+    for (let c = 0; c < 3; c++) { // for each channel
+        for (let i = 0; i < 1200; i++) { // height
+            for (let j = 0; j < 1200; j++) { // width
+                let pixelValue = paddedMat.ucharAt(i, j); // Normalizing the pixel value
+                let idx = c * 1200 * 1200 + i * 1200 + j; // Calculating the index in the 1D array
+                tensorData[idx] = pixelValue;
+            }
+        }
+    }
+    paddedMat.delete();
+
+    return {
+        data: tensorData,
+        type: 'float32',
+        dims: [1, 3, 1200, 1200] // dimensions of the tensor
+    };
+}
+
+function processOutputForOnnx(output) {
+    // Assuming output is an array of tensors and the bounding boxes are in the last tensor
+    const bboxTensor = output[3394]; // Huh?
+    const boxes = bboxTensor.data;
+    const numBoxes = bboxTensor.dims[0];
+
+    let boundingBoxes = [];
+    for (let i = 0; i < numBoxes; i++) {
+        // Each box has 4 coordinates
+        let box = boxes.slice(i * 4, (i + 1) * 4);
+        boundingBoxes.push({
+            x: box[0],
+            y: box[1],
+            width: box[2] - box[0],
+            height: box[3] - box[1]
+        });
+    }
+
+    return boundingBoxes;
+}
+
 export function deskew(imageElement) {
     if (typeof window.cv === 'undefined') {
         console.log.error('opencv.js is not loaded');
@@ -83,12 +159,12 @@ export function detectMeasures(imageElement) {
             }
         }
 
-        ////////////////////////////////////////////////////////////      
+        ////////////////////////////////////////////////////////////
         // Filter out things that are not measure bars (like long stems),
         // etc... We do this by computing the median height vertical
         // bar and discarding any bar that differes by a height of more
         // than 5.
-        ////////////////////////////////////////////////////////////      
+        ////////////////////////////////////////////////////////////
 
         // Calculate the median height of contours
         const heights = filteredContours.map((contour) => window.cv.boundingRect(contour).height);

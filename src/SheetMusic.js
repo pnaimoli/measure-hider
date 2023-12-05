@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './SheetMusic.css';
-import { detectMeasures, deskew } from './measureDetection';
+import { detectMeasures, detectMeasuresOnnx, deskew } from './measureDetection';
 
 import * as pdfjs from 'pdfjs-dist'
 import * as pdfjsWorker from 'pdfjs-dist/build/pdf.worker';
@@ -79,8 +79,8 @@ class SheetMusic extends Component {
                         const pdfPage = await pdf.getPage(page);
                         const viewport = pdfPage.getViewport({ scale: 1.5 });
                         const canvas = document.createElement('canvas');
-                        canvas.height = viewport.height;
-                        canvas.width = viewport.width;
+                        canvas.height = Math.min(1200, viewport.height);
+                        canvas.width = Math.min(1200, viewport.width);
 
                         const renderContext = {
                             canvasContext: canvas.getContext('2d'),
@@ -122,8 +122,12 @@ class SheetMusic extends Component {
         }), () => {
             const img = new Image();
             img.onload = () => {
-                const measures = detectMeasures(img);
-                this.updateStateArray('measureRects', pageIndex, measures, []);
+//                const measures = detectMeasures(img);
+//                this.updateStateArray('measureRects', pageIndex, measures, []);
+
+                detectMeasuresOnnx(img).then(measures => {
+                    this.updateStateArray('measureRects', pageIndex, measures, []);
+                });
             };
             img.src = this.state.deskewedImages[pageIndex];
         });
