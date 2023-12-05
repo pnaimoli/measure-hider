@@ -117,6 +117,33 @@ const App = () => {
             </div>
           </header>
           <div className="App-content">
+            {!uploadedFile && (
+            <div className="InstructionalContent">
+                <h2>Welcome to the Sheet Music App</h2>
+                <div className="Instructions">
+                    <div className="InstructionStep">
+                        <span className="Icon">📤</span>
+                        <p>To begin, upload a file above.</p>
+                    </div>
+                    <div className="InstructionStep">
+                        <span className="Icon">🔍</span>
+                        <p>Click the "Analyze" button on each page to start the measure detection algorithm (this might be slow!).</p>
+                    </div>
+                    <div className="InstructionStep">
+                        <span className="Icon">🎀</span>
+                        <p>Auto-detected measures will appear in pink.</p>
+                    </div>
+                    <div className="InstructionStep">
+                        <span className="Icon">⏱️</span>
+                        <p>Select your metronome's BPM and click any measure to start.</p>
+                    </div>
+                    <div className="InstructionStep">
+                        <span className="Icon">🛑</span>
+                        <p>Click any measure to stop.</p>
+                    </div>
+                </div>
+            </div>
+            )}
             <SheetMusic key={uploadedFile ? uploadedFile.name : null} uploadedFile={uploadedFile} bpm={bpm} ref={sheetMusicRef} onMeasureClick={handleMeasureClick} />
           </div>
         </div>

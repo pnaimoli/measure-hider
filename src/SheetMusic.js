@@ -262,7 +262,7 @@ class SheetMusic extends Component {
                     style={{ position: 'absolute', left: 5, top: 5 }}
                     onClick={() => this.handleAnalyzeClick(pageIndex)}
                 >
-                    Analyze
+                    Analyze 🔍
                 </button>
             );
         }
