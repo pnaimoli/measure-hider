@@ -1,7 +1,7 @@
 {
   "name": "measure-hider",
   "version": "1.0",
-  "homepage": "https://pnaimoli.github.io/measure-hider",
+  "homepage": "https://peternaimoli.com/measure-hider",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
