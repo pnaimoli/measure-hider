@@ -1,38 +1,40 @@
 import * as ort from 'onnxruntime-web';
 
-export async function detectMeasuresOnnx(imageElement) {
+export function detectMeasuresOnnx(imageElement) {
     // Create an ONNX session
-    const session = await ort.InferenceSession.create('/model.RCNN.12.onnx');
+    return ort.InferenceSession.create('./model.RCNN.12.onnx')
+        .then(session => {
+            // Preprocess the image to the format your model expects
+            const preprocessedImage = preprocessImageForOnnx(imageElement);
 
-    // Preprocess the image to the format your model expects
-    const preprocessedImage = preprocessImageForOnnx(imageElement);
+            // Create a tensor from the preprocessed image
+            const inputTensor = new ort.Tensor('float32', preprocessedImage.data, preprocessedImage.dims);
 
-    // Create a tensor from the preprocessed image
-    const inputTensor = new ort.Tensor('float32', preprocessedImage.data, preprocessedImage.dims);
+            // Run the model
+            return session.run({ 'images': inputTensor });
+        })
+        .then(output => {
+            // Process the output to extract bounding boxes
+            const boundingBoxes = processOutputForOnnx(output);
 
-    // Run the model
-    const output = await session.run({ 'images': inputTensor });
+            // Function to determine if two y-coordinates are close enough
+            function areYCoordinatesClose(y1, y2, tolerance) {
+                return Math.abs(y1 - y2) <= tolerance;
+            }
 
-    // Process the output to extract bounding boxes
-    const boundingBoxes = processOutputForOnnx(output);
+            // Function to sort bounding boxes
+            boundingBoxes.sort((a, b) => {
+                // First, sort by y-coordinate (top to bottom)
+                if (!areYCoordinatesClose(a.y, b.y, 10)) {
+                    return a.y - b.y;
+                }
 
-    // Function to determine if two y-coordinates are close enough
-    function areYCoordinatesClose(y1, y2, tolerance) {
-        return Math.abs(y1 - y2) <= tolerance;
-    }
+                // If y-coordinates are close, sort by x-coordinate (left to right)
+                return a.x - b.x;
+            });
 
-    // Function to sort bounding boxes
-    boundingBoxes.sort((a, b) => {
-        // First, sort by y-coordinate (top to bottom)
-        if (!areYCoordinatesClose(a.y, b.y, 10)) {
-            return a.y - b.y;
-        }
-
-        // If y-coordinates are close, sort by x-coordinate (left to right)
-        return a.x - b.x;
-    });
-
-    return boundingBoxes;
+            return boundingBoxes;
+        });
 }
 
 function preprocessImageForOnnx(imageElement) {
