@@ -50,18 +50,19 @@ Provide step-by-step instructions on how to install and set up your project. Mak
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/your-project.git
+   git clone https://github.com/pnaimoli/measure-hider.git
    ```
 
 2. Change to the project directory:
 
    ```bash
-   cd your-project
+   cd measure-hider
    ```
 
 3. Install dependencies:
 
    ```bash
+   cd client
    npm install
    ```
 
@@ -70,27 +71,11 @@ Provide step-by-step instructions on how to install and set up your project. Mak
 Start the development server:
 
    ```bash
-   npm install
+   npm start
    ```
 
 This will launch the Measure Hider web application on your local server.
 Open your web browser and go to http://localhost:3000 to access Measure Hider.
-Click the "Upload Music" button to select and upload your PDF sheet music.
-The application will automatically detect and divide your sheet music into individual measures.
-You can now interact with the sheet music by clicking on measures to hide or reveal them. Use this feature to challenge yourself and improve your sight-reading skills.
-
-### Issues
-
-I had to manually copy wasm files to my public directory to get this to work:
-
-   ```bash
-   mkdir -r public/static/js
-   cp node_modules/onnxruntime-web/dist/*.wasm public/static/js
-   ```
-
-## Demo
-
-Explore a live demo of Measure Hider on GitHub Pages. Upload your own sheet music and start enhancing your sight-reading skills today!
 
 ## License
 
