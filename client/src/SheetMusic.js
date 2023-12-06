@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './SheetMusic.css';
-import { detectMeasuresOnnx, deskew } from './measureDetection';
+import { deskew } from './measureDetection';
 
 import * as pdfjs from 'pdfjs-dist'
 import * as pdfjsWorker from 'pdfjs-dist/build/pdf.worker';
@@ -104,18 +104,36 @@ class SheetMusic extends Component {
         this.setState(prevState => ({
             analyzingPages: new Set(prevState.analyzingPages).add(pageIndex),
         }), () => {
-            const img = new Image();
-            img.onload = () => {
-                detectMeasuresOnnx(img).then(measures => {
-                    this.updateStateArray('measureRects', pageIndex, measures, []);
-                    this.setState(prevState => {
-                        const updatedAnalyzingPages = new Set(prevState.analyzingPages);
-                        updatedAnalyzingPages.delete(pageIndex);
-                        return { analyzingPages: updatedAnalyzingPages };
-                    });
-                });
+            const imgSrc = this.state.deskewedImages[pageIndex];
+
+            // Prepare the request body
+            const requestBody = {
+                imageData: imgSrc  // Assuming this is a data:image base64 string
             };
-            img.src = this.state.deskewedImages[pageIndex];
+
+            // Send the request to the Flask endpoint
+            fetch('http://127.0.0.1:5000/process-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => response.json())
+            .then(measures => {
+                this.updateStateArray('measureRects', pageIndex, measures, []);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Handle the error or update the state as needed
+            })
+            .finally(() => {
+                this.setState(prevState => {
+                    const updatedAnalyzingPages = new Set(prevState.analyzingPages);
+                    updatedAnalyzingPages.delete(pageIndex);
+                    return { analyzingPages: updatedAnalyzingPages };
+                });
+            });
         });
     }
 
@@ -229,10 +247,10 @@ class SheetMusic extends Component {
             onClick={(event) => this.handleMeasureClick(this, pageIndex, measureIndex, event)}
             style={{
                 position: 'absolute',
-                left: measure.x,
-                top: measure.y,
-                width: measure.width,
-                height: measure.height,
+                left: measure[0],
+                top: measure[1],
+                width: measure[2],
+                height: measure[3],
                 background: 'rgba(255, 0, 255, 0.15)',
                 border: '0px solid red',
                 fontSize: '16px',
