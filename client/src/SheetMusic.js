@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './SheetMusic.css';
-import { deskew } from './measureDetection';
+import { deskew } from './imageTools';
 
 import * as pdfjs from 'pdfjs-dist'
 import * as pdfjsWorker from 'pdfjs-dist/build/pdf.worker';
