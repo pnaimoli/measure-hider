@@ -22,9 +22,8 @@ class AudioLabsDataset(Dataset):
     """
     Dataset class for AudioLabs data.
     """
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir):
         self.root_dir = root_dir
-        self.transform = transform
         self.data = []
         self.memoized_data = {}  # Dictionary for memoization
 
@@ -62,10 +61,6 @@ class AudioLabsDataset(Dataset):
         image = torch.tensor(image, dtype=torch.float32).unsqueeze(0)
         image = torch.nn.functional.pad(image, (0, padding_right, 0, padding_bottom), 'constant', 0)
 
-        # Apply any additional transformations
-        if self.transform:
-            image = self.transform(image)
-
         # Load JSON data
         with open(json_path, 'r') as file:
             annotation_data = json.load(file)
@@ -89,9 +84,6 @@ class AudioLabsDataset(Dataset):
         targets = {}
         targets["boxes"] = boxes
         targets["labels"] = labels
-
-        if self.transform:
-            image = self.transform(image)
 
         # Store in the memoization dictionary
         self.memoized_data[idx] = (image, targets)
