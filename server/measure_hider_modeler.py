@@ -1,6 +1,7 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import base64
 import io
+import os
 import cv2
 import numpy as np
 import torch
@@ -27,7 +28,15 @@ def index():
     </html>
     '''
 
-@app.route('/process-image', methods=['POST'])
+@app.route('/measure-hider/', defaults={'path': ''})
+@app.route('/measure-hider/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/measure-hider/process-image', methods=['POST'])
 def process_image():
     # Extract the image data URL from the request
     data = request.json.get('imageData')
