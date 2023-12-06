@@ -3,8 +3,6 @@ import json
 import os
 import cv2
 import torch
-import torch.onnx
-import onnxruntime as ort
 import numpy as np
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
@@ -187,52 +185,6 @@ def test_model_on_image(epochs, image_path):
 
     plt.show()
 
-def test_model_on_image_onnx(epochs, image_path):
-    """
-    Test the ONNX model on a specific image and output the bounding boxes.
-    """
-    onnx_model_path = f'model.RCNN.{epochs}.onnx'
-
-    # Load and preprocess the image using OpenCV
-    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    image_height, image_width = image.shape
-
-    # Calculate padding to reach 1200x1200
-    padding_right = max(0, 1200 - image_width)
-    padding_bottom = max(0, 1200 - image_height)
-    image = np.pad(image, ((0, padding_bottom), (0, padding_right)), mode='constant', constant_values=0)
-    image = image.astype(np.float32)
-
-    # Convert image to numpy array and add batch dimension
-    # Add a channel dimension and repeat the grayscale image across 3 channels
-    image_3ch = np.repeat(image[:, :, np.newaxis], 3, axis=2)
-
-    # Reorder dimensions to put the channel dimension second (1, 3, 1200, 1200)
-    image_np = np.transpose(image_3ch, (2, 0, 1))
-    image_np = np.expand_dims(image_np, axis=0)
-
-    # Create ONNX runtime session
-    ort_session = ort.InferenceSession(onnx_model_path)
-
-    # Run the model
-    prediction = ort_session.run(
-        None,
-        {"images": image_np}
-    )
-
-    # Convert the tensor to a PIL Image for visualization
-    img_pil = Image.fromarray((image_np[0]).astype(np.uint8).transpose(1, 2, 0))
-
-    # Visualization
-    fig, ax = plt.subplots(1)
-    ax.imshow(img_pil.convert("RGB"))  # Convert to RGB for display
-
-    for box in prediction[0]:
-        rect = patches.Rectangle((box[0], box[1]), box[2] - box[0], box[3] - box[1], linewidth=1, edgecolor='r', facecolor='none')
-        ax.add_patch(rect)
-
-    plt.show()
-
 def train_mode(epochs):
     """
     Main function to execute the model training.
@@ -252,34 +204,13 @@ def train_mode(epochs):
     # Save the model
     torch.save(model.state_dict(), f'model.RCNN.{epochs}.pth')
 
-def convert_to_onnx(epochs):
-    """
-    Convert a PyTorch model to ONNX format.
-    """
-    model_path = f'model.RCNN.{epochs}.pth'
-    output_path = f'model.RCNN.{epochs}.onnx'
-
-    # Load and configure the model
-    model = create_model()
-    model.load_state_dict(torch.load(model_path, map_location=DEVICE))
-    model.eval()
-
-    dummy_input = torch.randn(1, 3, 1200, 1200)  # 1 image, 3 color channels, 1200x1200 size
-    torch.onnx.export(model, dummy_input, output_path)
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train a model for measure detection')
     parser.add_argument('--epochs', type=int, default=2, help='Number of training epochs')
     parser.add_argument('--image', type=str, help='Path to an image file for testing the model')
-    parser.add_argument('-x', '--onnx', action='store_true', help='Convert model to ONNX format')
     args = parser.parse_args()
 
     if args.image:
-        if args.onnx:
-            test_model_on_image_onnx(args.epochs, args.image)
-        else:
-            test_model_on_image(args.epochs, args.image)
-    elif args.onnx:
-        convert_to_onnx(args.epochs)
+        test_model_on_image(args.epochs, args.image)
     else:
         train_mode(args.epochs)
