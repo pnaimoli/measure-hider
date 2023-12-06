@@ -71,7 +71,7 @@ def run_model_on_image(image):
 
     # Load and configure the model
     model = create_model()
-    model.load_state_dict(torch.load(f'model.RCNN.12.pth', map_location=DEVICE))
+    model.load_state_dict(torch.load(f'model.RCNN.20.pth', map_location=DEVICE))
     model.eval()  # Set the model to evaluation mode
 
     # Convert grayscale image to 3-channel image
