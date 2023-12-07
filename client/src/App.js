@@ -10,6 +10,7 @@ const App = () => {
     const [isMetronomeOn, setIsMetronomeOn] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false); // Added state for Play/Stop
     const [bpm, setBpm] = useState(60); // Default BPM
+    const [beatsPerMeasure, setBeatsPerMeasure] = useState(4); // Default time signature
     const [isScrolled, setIsScrolled] = useState(false);
 
     useEffect(() => {
@@ -69,7 +70,7 @@ const App = () => {
                         setIsPlaying(false);
                 }
 
-                if (beatsCalled === 3) {
+                if (beatsCalled === beatsPerMeasure - 1) {
                     // If this is the last beat, go back to 0!
                     beatsCalled = 0;
                 } else {
@@ -87,7 +88,7 @@ const App = () => {
                 audioContext.close();
             }
         };
-    }, [isPlaying, isMetronomeOn, bpm]);
+    }, [isPlaying, isMetronomeOn, bpm, beatsPerMeasure]);
 
     const handleFileUpload = (event) => {
         setIsPlaying(false);
@@ -107,6 +108,12 @@ const App = () => {
             </div>
             <img src={sheetMusicLogo} alt="Sheet Music" className="SheetMusicLogo" />
             <div className="MetronomeSettings">
+              <label>
+                <select value={beatsPerMeasure} onChange={(e) => setBeatsPerMeasure(e.target.value)}>
+                  <option value="4">4/4</option>
+                  <option value="3">3/4</option>
+                </select>
+              </label>
               <label>
                 Metronome:
                 <input type="checkbox" checked={isMetronomeOn} onChange={() => setIsMetronomeOn(!isMetronomeOn)}/>
