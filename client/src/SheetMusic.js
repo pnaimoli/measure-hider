@@ -121,6 +121,15 @@ class SheetMusic extends Component {
             })
             .then(response => response.json())
             .then(measures => {
+                // Sort measures based on y-coordinate and then x-coordinate
+                measures.sort((a, b) => {
+                    // Compare the y-coordinate (top to bottom)
+                    if (Math.abs(a[1] - b[1]) <= 15) {
+                        return a[0] - b[0]; // Sort by x-coordinate (left to right)
+                    }
+                    return a[1] - b[1]; // Sort by y-coordinate
+                });
+
                 this.updateStateArray('measureRects', pageIndex, measures, []);
             })
             .catch(error => {
