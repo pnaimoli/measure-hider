@@ -61,6 +61,9 @@ class AudioLabsDataset(Dataset):
         image = torch.tensor(image, dtype=torch.float32).unsqueeze(0)
         image = torch.nn.functional.pad(image, (0, padding_right, 0, padding_bottom), 'constant', 0)
 
+        # Convert grayscale image to 3-channel image
+        img_3channel = image.repeat(3, 1, 1)  # Repeat the channel 3 times
+
         # Load JSON data
         with open(json_path, 'r') as file:
             annotation_data = json.load(file)
@@ -132,7 +135,7 @@ def create_model():
     model = model.to(DEVICE)
     return model
 
-def test_model_on_image(epochs, image_path):
+def test_model_on_image(model_filename, image_path):
     """
     Test the model on a specific image and output the bounding boxes.
     """
@@ -150,7 +153,7 @@ def test_model_on_image(epochs, image_path):
 
     # Load and configure the model
     model = create_model()
-    model.load_state_dict(torch.load(f'model.RCNN.{epochs}.pth', map_location=DEVICE))
+    model.load_state_dict(torch.load(model_filename, map_location=DEVICE))
     model.eval()  # Set the model to evaluation mode
 
     # Convert grayscale image to 3-channel image
@@ -177,7 +180,7 @@ def test_model_on_image(epochs, image_path):
 
     plt.show()
 
-def train_mode(epochs):
+def train_mode(epochs, model_filename):
     """
     Main function to execute the model training.
     """
@@ -194,15 +197,16 @@ def train_mode(epochs):
     train(model, data_loader, epochs)
 
     # Save the model
-    torch.save(model.state_dict(), f'model.RCNN.{epochs}.pth')
+    torch.save(model.state_dict(), model_filename)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train a model for measure detection')
     parser.add_argument('--epochs', type=int, default=2, help='Number of training epochs')
     parser.add_argument('--image', type=str, help='Path to an image file for testing the model')
+    parser.add_argument('--model', type=str, required=True, help='Path to the model file')
     args = parser.parse_args()
 
     if args.image:
-        test_model_on_image(args.epochs, args.image)
+        test_model_on_image(args.model, args.image)
     else:
-        train_mode(args.epochs)
+        train_mode(args.epochs, args.model)
