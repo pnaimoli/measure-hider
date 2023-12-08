@@ -124,7 +124,7 @@ class SheetMusic extends Component {
                 // Sort measures based on y-coordinate and then x-coordinate
                 measures.sort((a, b) => {
                     // Compare the y-coordinate (top to bottom)
-                    if (Math.abs(a.y - b.y) <= 15) {
+                    if (Math.abs(a.y - b.y) <= 50) {
                         return a.x - b.x; // Sort by x-coordinate (left to right)
                     }
                     return a.y - b.y; // Sort by y-coordinate
