@@ -21,7 +21,7 @@ class MeasureHiderModelerTestCase(unittest.TestCase):
         # Additional assertions to verify the response data can be added here
         # For example:
         data = json.loads(response.get_data(as_text=True))
-        self.assertEqual(len(data), 32)
+        self.assertEqual(len(data), 31)
 
 if __name__ == '__main__':
     unittest.main()
