@@ -146,9 +146,7 @@ class SheetMusic extends Component {
         });
     }
 
-    handleDeleteMeasure = (pageIndex, measureIndex, event) => {
-        event.stopPropagation(); // Prevents the event from bubbling up to parent elements
-
+    handleDeleteMeasure = (pageIndex, measureIndex) => {
         this.setState(prevState => {
             const updatedMeasureRects = [...prevState.measureRects];
             updatedMeasureRects[pageIndex] = updatedMeasureRects[pageIndex].filter((_, index) => index !== measureIndex);
@@ -252,6 +250,15 @@ class SheetMusic extends Component {
         return true;
     }
 
+    handleButtonPress (pageIndex, measureIndex, e) {
+        this.buttonPressTimer = setTimeout(() =>
+            this.handleDeleteMeasure(pageIndex, measureIndex), 1250);
+    }
+
+    handleButtonRelease (pageIndex, measureIndex, e) {
+        clearTimeout(this.buttonPressTimer);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
     // Start rendering our elements
     ////////////////////////////////////////////////////////////////////////////////
@@ -280,6 +287,11 @@ class SheetMusic extends Component {
             key={measureIndex}
             className={`measure ${isPlayed ? 'played' : ''}`}
             onClick={(event) => this.handleMeasureClick(this, pageIndex, measureIndex, event)}
+            onTouchStart={(e) => this.handleButtonPress(pageIndex, measureIndex, e)}
+            onTouchEnd={(e) => this.handleButtonRelease(pageIndex, measureIndex, e)}
+            onMouseDown={(e) => this.handleButtonPress(pageIndex, measureIndex, e)}
+            onMouseUp={(e) => this.handleButtonRelease(pageIndex, measureIndex, e)}
+            onMouseLeave={(e) => this.handleButtonRelease(pageIndex, measureIndex, e)}
             style={{
                 position: 'absolute',
                 left: measure.x,
@@ -296,9 +308,6 @@ class SheetMusic extends Component {
                 "--transition-time-delay": `${transitionDelay}s`
             }}
             >
-                <div className="measure-delete-btn" onClick={(event) => this.handleDeleteMeasure(pageIndex, measureIndex, event)}>
-                    &#10006;
-                </div>
                 <div className="measure-text">
                 {/*measureIndex + 1*/}
                 </div>

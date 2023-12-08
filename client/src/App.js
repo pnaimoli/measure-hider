@@ -164,7 +164,7 @@ const App = () => {
                     </div>
                     <div className="InstructionStep">
                         <span className="Icon">🎀</span>
-                        <p>Auto-detected measures will appear in pink.</p>
+                        <p>Auto-detected measures will appear in pink (TIP: long press a measure to delete it).</p>
                     </div>
                     <div className="InstructionStep">
                         <span className="Icon">⏱️</span>
