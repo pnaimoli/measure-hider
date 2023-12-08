@@ -1,0 +1,5 @@
+names:
+- system_measures
+nc: 1
+train: AudioLabs_v2/train/images
+val: AudioLabs_v2/val/images
