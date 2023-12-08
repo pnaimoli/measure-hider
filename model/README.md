@@ -16,32 +16,32 @@ We use the AudioLabs Dataset v2 for training our model. AudioLabs v2 contains sh
 To get started with the program, follow these steps:
 
 ## Download the dataset:
-    ```bash
-    curl -O https://github.com/apacha/OMR-Datasets/releases/download/datasets/AudioLabs_v2.zip
-    ```
+   ```bash
+   curl -O https://github.com/apacha/OMR-Datasets/releases/download/datasets/AudioLabs_v2.zip
+   ```
 
 ## Create a directory and unzip the dataset:
-    ```bash
-    mkdir -p AudioLabs_v2
-    mv AudioLabs_v2.zip AudioLabs_v2/
-    cd AudioLabs_v2 && unzip AudioLabs_v2.zip && cd ..
-    ```
+   ```bash
+   mkdir -p AudioLabs_v2
+   mv AudioLabs_v2.zip AudioLabs_v2/
+   cd AudioLabs_v2 && unzip AudioLabs_v2.zip && cd ..
+   ```
 
 ## Prepare the dataset:
-    ```bash
-    python3 prepare_dataset.py
-    ```
+   ```bash
+   python3 prepare_dataset.py
+   ```
 This helper script formats the dataset to be compatible with the YOLO algorithm. It organizes images and annotations in the structure YOLO expects, ensuring smooth training and validation processes.
 
 ## Configure YOLO directories.
 Before training the model, ensure the YOLO settings in data.yaml are modified to point to the current directory for runs, weights, and datasets. This step is crucial for the correct functioning of the model training process.  To view/modify YOLO settings you can use the command
-    ```bash
-    yolo settings
-    ```
+   ```bash
+   yolo settings
+   ```
 
 # Usage
 To train the model, use the following command:
-    ```bash
-    yolo train data=data.yaml model=yolov8n.pt epochs=12 lr0=0.01
-    ```
+   ```bash
+   yolo train data=data.yaml model=yolov8n.pt epochs=12 lr0=0.01
+   ```
 This example training command involves 12 epochs with an initial learning rate of 0.01. Adjust the parameters as needed to suit your specific requirements, but these seem to work well.
