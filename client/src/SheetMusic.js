@@ -156,6 +156,26 @@ class SheetMusic extends Component {
         });
     };
 
+    autoScrollToCurrentMeasure() {
+        const [pageIndex, measureIndex] = this.state.currentHiddenMeasure;
+        const measureRects = this.state.measureRects[pageIndex];
+        if (!measureRects || measureRects.length === 0) return;
+
+        const currentMeasure = measureRects[measureIndex];
+        if (!currentMeasure) return;
+
+        // Calculate the position to scroll to
+        // Assuming each page is within a container with a unique ID like "page-0", "page-1", etc.
+        const pageElement = document.getElementById(`page-${pageIndex}`);
+        if (pageElement) {
+            const measureTop = currentMeasure[1]; // Y coordinate of the measure
+            const offsetTop = pageElement.offsetTop;
+            const scrollPosition = offsetTop + measureTop - window.innerHeight * 0.20;
+
+            window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+        }
+    }
+
     hideNextMeasure() {
         if (!this.state.measureClicked) {
             console.error('No measures have been clicked yet.');
@@ -183,7 +203,9 @@ class SheetMusic extends Component {
             }
         }
 
-        this.setState({currentHiddenMeasure: measure});
+        this.setState({ currentHiddenMeasure: measure }, () => {
+            this.autoScrollToCurrentMeasure();
+        });
         return true;
     }
 
@@ -248,6 +270,10 @@ class SheetMusic extends Component {
         return measures.map((measure, measureIndex) => {
             // Determine if the current measure should have the "played" class
             const isPlayed = this.isMeasurePlayed(pageIndex, measureIndex);
+            const beats = this.props.beatsPerMeasure;
+            const measureDuration = beats * 60 / this.props.bpm; // in seconds
+            const transitionDuration = measureDuration * (this.props.transitionEnd - this.props.transitionStart)
+            const transitionDelay = measureDuration * this.props.transitionStart;
 
             return (
             <div
@@ -266,8 +292,8 @@ class SheetMusic extends Component {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                "--transition-time": 4*60/this.props.bpm * 2/4 + "s",
-                "--transition-time-delay": 4*60/this.props.bpm * 1/4 + "s",
+                "--transition-time": `${transitionDuration}s`,
+                "--transition-time-delay": `${transitionDelay}s`
             }}
             >
                 <div className="measure-delete-btn" onClick={(event) => this.handleDeleteMeasure(pageIndex, measureIndex, event)}>
@@ -306,7 +332,7 @@ class SheetMusic extends Component {
         return (
             <div>
                 {this.state.deskewedImages.map((dataUrl, pageIndex) => (
-                <div key={pageIndex} className="MusicPage">
+                <div key={pageIndex} id={`page-${pageIndex}`} className="MusicPage">
                   {this.renderAnalyzeButton(pageIndex)}
                   <img src={dataUrl} alt={`Page ${pageIndex + 1}`} style={{ display: 'block' }} />
                   {this.renderMeasures(pageIndex)}

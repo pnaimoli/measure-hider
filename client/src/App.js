@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import MultiRangeSlider from "multi-range-slider-react";
 import './App.css';
 import SheetMusic from './SheetMusic'
 import sheetMusicLogo from './sheet-music-logo.png';
@@ -11,6 +12,8 @@ const App = () => {
     const [isPlaying, setIsPlaying] = useState(false); // Added state for Play/Stop
     const [bpm, setBpm] = useState(60); // Default BPM
     const [beatsPerMeasure, setBeatsPerMeasure] = useState(4); // Default time signature
+    const [transitionStart, setTransitionStart] = useState(0.25); // Default start of transition (e.g., 25% into the measure)
+    const [transitionEnd, setTransitionEnd] = useState(0.75); // Default end of transition (e.g., 75% into the measure)
     const [isScrolled, setIsScrolled] = useState(false);
 
     useEffect(() => {
@@ -124,6 +127,24 @@ const App = () => {
                 <input type="range" min="40" max="240" value={bpm} onChange={(e) => (setBpm(e.target.value))} disabled={!isMetronomeOn} />
                 {bpm} BPM
             </div>
+            <div className="range-slider">
+              <MultiRangeSlider
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  ruler={false}
+                  label={true}
+                  preventWheel={false}
+                  minValue={.25}
+                  maxValue={.75}
+                  style={{
+                    border: 'none',
+                    boxShadow: 'none',
+                  }}
+                  onInput={(e) => {setTransitionStart(e.minValue);
+                                   setTransitionEnd(e.maxValue)}}
+              />
+            </div>
             <div className="UploadSection">
               <input type="file" onChange={handleFileUpload} accept="application/pdf" />
             </div>
@@ -156,7 +177,7 @@ const App = () => {
                 </div>
             </div>
             )}
-            <SheetMusic key={uploadedFile ? uploadedFile.name : null} uploadedFile={uploadedFile} bpm={bpm} ref={sheetMusicRef} onMeasureClick={handleMeasureClick} />
+            <SheetMusic key={uploadedFile ? uploadedFile.name : null} uploadedFile={uploadedFile} bpm={bpm} transitionStart={transitionStart} transitionEnd={transitionEnd} beatsPerMeasure={beatsPerMeasure} ref={sheetMusicRef} onMeasureClick={handleMeasureClick} />
           </div>
         </div>
     );

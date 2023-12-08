@@ -58,6 +58,10 @@
   text-align: center; /* Center the text within the fixed width */
 }
 
+.range-slider {
+    width: 200px; /* or any specific width */
+}
+
 .UploadSection {
   margin-left: 20px; /* Added margin for spacing */
 }
