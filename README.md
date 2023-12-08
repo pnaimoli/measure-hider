@@ -34,48 +34,39 @@ Measure Hider is a web application designed for musicians to enhance their sight
 
 Discover a new way to practice and improve your sight-reading skills with Measure Hider.
 
-## Getting Started
+## Project Organization
 
-### Prerequisites
+The project is organized into several key directories and files to ensure easy navigation and understanding of the codebase. Here's an overview of the file structure and the purpose of each component:
 
-List any prerequisites or dependencies that need to be installed before someone can use your project. For example:
+- **client/** - This directory contains the React code for the frontend of the application.
+- **dist/** - The production directory. It contains the build that gets uploaded to the web server for deployment.
+- **model/** - Houses the modeling code. This is where the YOLO model and related machine learning code are located.
+- **server/** - Contains a WSGI server that uses the model created in the 'model' directory to serve AJAX requests for the client code.
 
-- Node.js
-- npm
+Each directory is structured to maintain a separation of concerns, ensuring that the frontend, backend, and model training aspects of the project are distinct and easily manageable.
 
-### Installation
+## Installation
 
-Provide step-by-step instructions on how to install and set up your project. Make it clear and easy to follow:
+The installation and running of the project are currently handled through an ad-hoc series of steps. Follow these instructions to set up and run a test server on your machine:
 
-1. Clone the repository:
+1. **Prepare the Server Directory:**
+   - Copy the contents of the `server/` directory into `dist/`.
 
-   ```bash
-   git clone https://github.com/pnaimoli/measure-hider.git
-   ```
+2. **Set Up the Client:**
+   - Navigate to the `client` directory.
+   - Run `npm install` to install the necessary dependencies.
+   - After installation, run `npm build` to build the client-side application.
 
-2. Change to the project directory:
+3. **Organize Build Results:**
+   - Copy the build results (from the `client` build process) to `dist/static/`.
 
-   ```bash
-   cd measure-hider
-   ```
+4. **Add the Model:**
+   - Ensure that the model generated from YOLO training is placed in the root directory of `dist/` and named `model.pt`.
 
-3. Install dependencies:
+5. **Run the Test Server:**
+   - You can now run a test server on your machine. In the `dist` directory, use the command `python measure_hider_modeler.py` to start the server.
 
-   ```bash
-   cd client
-   npm install
-   ```
-
-## Usage
-
-Start the development server:
-
-   ```bash
-   npm start
-   ```
-
-This will launch the Measure Hider web application on your local server.
-Open your web browser and go to http://localhost:3000 to access Measure Hider.
+These steps will set up both the client and server sides of the application, allowing you to run a test server locally for development and testing purposes.
 
 ## License
 
