@@ -2,16 +2,6 @@
 
 A web application for hiding measures as you play along to sheet music.
 
-## Table of Contents
-
-- [About](#about)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-- [Usage](#usage)
-- [Demo](#demo)
-- [License](#license)
-
 ## About
 
 Measure Hider is a web application designed for musicians to enhance their sight-reading skills by providing an interactive and unique way to play along with sheet music. With Measure Hider, you can upload your own PDF sheet music, and the application will automatically detect and divide the music into individual measures. It offers a one-of-a-kind learning experience that focuses on improving your lookahead skills while sight-reading.
