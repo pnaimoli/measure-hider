@@ -63,8 +63,8 @@ class SheetMusic extends Component {
                         const pdfPage = await pdf.getPage(page);
                         const viewport = pdfPage.getViewport({ scale: 1.5 });
                         const canvas = document.createElement('canvas');
-                        canvas.height = Math.min(1200, viewport.height);
-                        canvas.width = Math.min(1200, viewport.width);
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
 
                         const renderContext = {
                             canvasContext: canvas.getContext('2d'),
@@ -124,10 +124,10 @@ class SheetMusic extends Component {
                 // Sort measures based on y-coordinate and then x-coordinate
                 measures.sort((a, b) => {
                     // Compare the y-coordinate (top to bottom)
-                    if (Math.abs(a[1] - b[1]) <= 15) {
-                        return a[0] - b[0]; // Sort by x-coordinate (left to right)
+                    if (Math.abs(a.y - b.y) <= 15) {
+                        return a.x - b.x; // Sort by x-coordinate (left to right)
                     }
-                    return a[1] - b[1]; // Sort by y-coordinate
+                    return a.y - b.y; // Sort by y-coordinate
                 });
 
                 this.updateStateArray('measureRects', pageIndex, measures, []);
@@ -168,7 +168,7 @@ class SheetMusic extends Component {
         // Assuming each page is within a container with a unique ID like "page-0", "page-1", etc.
         const pageElement = document.getElementById(`page-${pageIndex}`);
         if (pageElement) {
-            const measureTop = currentMeasure[1]; // Y coordinate of the measure
+            const measureTop = currentMeasure.y; // Y coordinate of the measure
             const offsetTop = pageElement.offsetTop;
             const scrollPosition = offsetTop + measureTop - window.innerHeight * 0.20;
 
@@ -282,10 +282,10 @@ class SheetMusic extends Component {
             onClick={(event) => this.handleMeasureClick(this, pageIndex, measureIndex, event)}
             style={{
                 position: 'absolute',
-                left: measure[0],
-                top: measure[1],
-                width: measure[2],
-                height: measure[3],
+                left: measure.x,
+                top: measure.y,
+                width: measure.w,
+                height: measure.h,
                 background: 'rgba(255, 0, 255, 0.15)',
                 border: '0px solid red',
                 fontSize: '16px',
