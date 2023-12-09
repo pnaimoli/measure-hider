@@ -133,7 +133,7 @@ const App = () => {
                   max={1}
                   step={0.1}
                   ruler={false}
-                  label={true}
+                  label={false}
                   preventWheel={false}
                   minValue={.25}
                   maxValue={.75}
