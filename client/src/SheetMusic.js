@@ -42,7 +42,14 @@ class SheetMusic extends Component {
 
                     for (let page = 1; page <= pageNum; page++) {
                         const pdfPage = await pdf.getPage(page);
-                        const viewport = pdfPage.getViewport({ scale: 1.5 });
+                        const originalViewport = pdfPage.getViewport({ scale: 1 });
+
+                        // Calculate scale based on the window width
+                        const windowWidth = window.innerWidth;
+                        const margin = 20; // Adjust as needed for margins
+                        const scale = (windowWidth - margin) / originalViewport.width;
+
+                        const viewport = pdfPage.getViewport({ scale: scale });
                         const canvas = document.createElement('canvas');
                         canvas.height = viewport.height;
                         canvas.width = viewport.width;
