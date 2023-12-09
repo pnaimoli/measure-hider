@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import './SheetMusic.css';
-import { deskew } from './imageTools';
 
 import * as pdfjs from 'pdfjs-dist'
 import * as pdfjsWorker from 'pdfjs-dist/build/pdf.worker';
@@ -11,7 +10,6 @@ class SheetMusic extends Component {
         super(props);
         this.state = {
             pageImages: [],
-            deskewedImages: [],
             measureRects: [],
             measureClicked: null,
             currentHiddenMeasure: null,
@@ -28,23 +26,6 @@ class SheetMusic extends Component {
     }
 
     componentWillUnmount() {
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        // Deskew
-        if (this.state.pageImages !== prevState.pageImages) {
-            for (let pageIndex = this.state.deskewedImages.length;
-                 pageIndex < this.state.pageImages.length;
-                 ++pageIndex) {
-
-                const img = new Image();
-                img.onload = () => {
-                    const deskewedImage = deskew(img);
-                    this.updateStateArray('deskewedImages', pageIndex, deskewedImage);
-                };
-                img.src = this.state.pageImages[pageIndex];
-            }
-        }
     }
 
     convertPdfToPng(file) {
@@ -104,7 +85,7 @@ class SheetMusic extends Component {
         this.setState(prevState => ({
             analyzingPages: new Set(prevState.analyzingPages).add(pageIndex),
         }), () => {
-            const imgSrc = this.state.deskewedImages[pageIndex];
+            const imgSrc = this.state.pageImages[pageIndex];
 
             // Prepare the request body
             const requestBody = {
@@ -340,7 +321,7 @@ class SheetMusic extends Component {
     render() {
         return (
             <div>
-                {this.state.deskewedImages.map((dataUrl, pageIndex) => (
+                {this.state.pageImages.map((dataUrl, pageIndex) => (
                 <div key={pageIndex} id={`page-${pageIndex}`} className="MusicPage">
                   {this.renderAnalyzeButton(pageIndex)}
                   <img src={dataUrl} alt={`Page ${pageIndex + 1}`} style={{ display: 'block' }} />
