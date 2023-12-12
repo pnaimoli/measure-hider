@@ -59,7 +59,3 @@ The installation and running of the project are currently handled through an ad-
    - You can now run a test server on your machine. In the `dist` directory, use the command `python measure_hider_modeler.py` to start the server.
 
 These steps will set up both the client and server sides of the application, allowing you to run a test server locally for development and testing purposes.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
