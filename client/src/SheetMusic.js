@@ -1,20 +1,50 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import './SheetMusic.css';
 
 import * as pdfjs from 'pdfjs-dist'
 import * as pdfjsWorker from 'pdfjs-dist/build/pdf.worker';
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker
 
+// The model for measure detection was trained with images around 600px 
+// in width. To ensure consistency with the training data, images sent to
+// the server are scaled to a width close to 600px, enhancing detection
+// accuracy.
+const SERVER_IMAGE_WIDTH = 600;
+
 class SheetMusic extends Component {
+    static propTypes = {
+        uploadedFile: PropTypes.object,
+        fileUrl: PropTypes.string,
+        onMeasureClick: PropTypes.func,
+        beatsPerMeasure: PropTypes.number,
+        bpm: PropTypes.number,
+        transitionEnd: PropTypes.number,
+        transitionStart: PropTypes.number,
+    };
+
+    static defaultProps = {
+        uploadedFile: null,
+        fileUrl: null,
+        onMeasureClick: () => {},
+        beatsPerMeasure: 4,
+        bpm: 60,
+        transitionEnd: 1,
+        transitionStart: 0,
+    };
+
     constructor(props) {
         super(props);
         this.state = {
             pageImages: [],
-            measureRects: [], // Note these are scaled so that width of the image is 600.
+            measureRects: [], // Dimensions are fractional dimensions
             measureClicked: null,
             currentHiddenMeasure: null,
             analyzingPages: new Set(),
         };
+
+        // Initialize an array of refs, one for each page.
+        this.pageRefs = [];
     }
 
     componentDidMount() {
@@ -29,9 +59,6 @@ class SheetMusic extends Component {
         }
     }
 
-    componentWillUnmount() {
-    }
-
     convertPdfToPng(file) {
         const fileReader = new FileReader();
 
@@ -42,9 +69,7 @@ class SheetMusic extends Component {
                     const loadingTask = pdfjs.getDocument({ data: arrayBuffer, verbosity: pdfjs.VerbosityLevel.ERRORS });
                     const pdf = await loadingTask.promise;
 
-                    const pageNum = pdf.numPages;
-
-                    for (let page = 1; page <= pageNum; page++) {
+                    for (let page = 1; page <= pdf.numPages; page++) {
                         const pdfPage = await pdf.getPage(page);
                         const originalViewport = pdfPage.getViewport({ scale: 1 });
 
@@ -67,6 +92,7 @@ class SheetMusic extends Component {
 
                         this.updateStateArray('pageImages', page - 1, canvas.toDataURL('image/png'));
                     }
+                    this.pageRefs = [...Array(pdf.numPages)].map(() => React.createRef());
 
                     resolve();
                 } catch (error) {
@@ -82,16 +108,17 @@ class SheetMusic extends Component {
         });
     }
 
-    convertPdfUrlToPng(url) {
-        return fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.arrayBuffer();
-            })
-            .then(arrayBuffer => this.convertPdfToPng(new Blob([arrayBuffer])))
-            .catch(error => console.error("Error fetching PDF: ", error));
+    async convertPdfUrlToPng(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const arrayBuffer = await response.arrayBuffer();
+            await this.convertPdfToPng(new Blob([arrayBuffer]));
+        } catch (error) {
+            console.error("SheetMusic: Error in convertPdfUrlToPng - ", error.message);
+        }
     }
 
     handleMeasureClick(divElement, pageIndex, measureIndex, event) {
@@ -104,53 +131,68 @@ class SheetMusic extends Component {
         this.props.onMeasureClick(event);
     }
 
-    handleAnalyzeClick(pageIndex) {
+    async handleAnalyzeClick(pageIndex) {
         this.setState(prevState => ({
             analyzingPages: new Set(prevState.analyzingPages).add(pageIndex),
-        }), () => {
+        }));
+
+        try {
             const imgSrc = this.state.pageImages[pageIndex];
 
-            // Scale the image to 600 width while maintaining aspect ratio
-            this.scaleImage(imgSrc, 600).then(scaledImageSrc => {
-                // Prepare the request body with the scaled image
-                const requestBody = {
-                    imageData: scaledImageSrc // Scaled image data
-                };
+            // Scale the image while maintaining aspect ratio
+            const scaledImageSrc = await this.scaleImage(imgSrc, SERVER_IMAGE_WIDTH);
 
-                // Send the request to the Flask endpoint
-                return fetch('./process-image', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-            })
-            .then(response => response.json())
-            .then(measures => {
-                // Sort measures based on y-coordinate and then x-coordinate
-                measures.sort((a, b) => {
-                    // Compare the y-coordinate (top to bottom)
-                    if (Math.abs(a.y - b.y) <= 50) {
-                        return a.x - b.x; // Sort by x-coordinate (left to right)
-                    }
-                    return a.y - b.y; // Sort by y-coordinate
-                });
+            // Prepare the request body with the scaled image
+            const requestBody = {
+                imageData: scaledImageSrc // Scaled image data
+            };
 
-                this.updateStateArray('measureRects', pageIndex, measures, []);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Handle the error or update the state as needed
-            })
-            .finally(() => {
-                this.setState(prevState => {
-                    const updatedAnalyzingPages = new Set(prevState.analyzingPages);
-                    updatedAnalyzingPages.delete(pageIndex);
-                    return { analyzingPages: updatedAnalyzingPages };
-                });
+            // Send the request to the Flask endpoint
+            const response = await fetch('./process-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
             });
-        });
+
+            const measures = await response.json();
+
+            // Sort measures based on y-coordinate and then x-coordinate
+            measures.sort((a, b) => {
+                if (Math.abs(a.y - b.y) <= 50) {
+                    return a.x - b.x; // Sort by x-coordinate (left to right)
+                }
+                return a.y - b.y; // Sort by y-coordinate
+            });
+
+            // Convert measure dimensions to percentages
+            const scaledImage = new Image();
+            scaledImage.src = scaledImageSrc;
+
+            await new Promise((resolve, reject) => {
+                scaledImage.onload = resolve;
+                scaledImage.onerror = reject;
+            });
+
+            const measuresAsPercents = measures.map(measure => ({
+                x: (measure.x / scaledImage.width),
+                y: (measure.y / scaledImage.height),
+                w: (measure.w / scaledImage.width),
+                h: (measure.h / scaledImage.height),
+            }));
+
+            this.updateStateArray('measureRects', pageIndex, measuresAsPercents, []);
+        } catch (error) {
+            console.error('Error:', error);
+            // Handle the error or update the state as needed
+        } finally {
+            this.setState(prevState => {
+                const updatedAnalyzingPages = new Set(prevState.analyzingPages);
+                updatedAnalyzingPages.delete(pageIndex);
+                return { analyzingPages: updatedAnalyzingPages };
+            });
+        }
     }
 
     // Utility function to scale the image
@@ -174,21 +216,6 @@ class SheetMusic extends Component {
         });
     }
 
-    rectToPercentage(pageIndex, measureRect) {
-        const originalImage = new Image();
-        originalImage.src = this.state.pageImages[pageIndex];
-        const scaledWidth = 600; // Assuming 600 is the width used for analysis
-        const scale = originalImage.width / scaledWidth;
-        const scaledHeight = originalImage.height / scale;
-
-        return {
-            x: (measureRect.x / scaledWidth),
-            y: (measureRect.y / scaledHeight),
-            w: (measureRect.w / scaledWidth),
-            h: (measureRect.h / scaledHeight)
-        };
-    }
-
     handleDeleteMeasure = (pageIndex, measureIndex) => {
         this.setState(prevState => {
             const updatedMeasureRects = [...prevState.measureRects];
@@ -206,11 +233,9 @@ class SheetMusic extends Component {
         if (!currentMeasure) return;
 
         // Calculate the position to scroll to
-        // Assuming each page is within a container with a unique ID like "page-0", "page-1", etc.
-        const pageElement = document.getElementById(`page-${pageIndex}`);
+        const pageElement = this.pageRefs[pageIndex]?.current;
         if (pageElement) {
-            const percentageRect = this.rectToPercentage(pageIndex, currentMeasure)
-            const measureTop = percentageRect.y * pageElement.clientHeight;
+            const measureTop = currentMeasure.y * pageElement.clientHeight;
             const offsetTop = pageElement.offsetTop;
             const scrollPosition = offsetTop + measureTop - window.innerHeight * 0.20;
 
@@ -326,9 +351,6 @@ class SheetMusic extends Component {
             const transitionDuration = measureDuration * (this.props.transitionEnd - this.props.transitionStart)
             const transitionDelay = measureDuration * this.props.transitionStart;
 
-            // Turn the measure back into original coordinates.
-            const percentageRect = this.rectToPercentage(pageIndex, measure);
-
             return (
             <div
             key={measureIndex}
@@ -341,10 +363,10 @@ class SheetMusic extends Component {
             onMouseLeave={(e) => this.handleButtonRelease(pageIndex, measureIndex, e)}
             style={{
                 position: 'absolute',
-                left: `${percentageRect.x*100}%`,
-                top: `${percentageRect.y*100}%`,
-                width: `${percentageRect.w*100}%`,
-                height: `${percentageRect.h*100}%`,
+                left: `${measure.x*100}%`,
+                top: `${measure.y*100}%`,
+                width: `${measure.w*100}%`,
+                height: `${measure.h*100}%`,
                 background: 'rgba(255, 0, 255, 0.15)',
                 border: '0px solid red',
                 fontSize: '16px',
@@ -388,10 +410,14 @@ class SheetMusic extends Component {
         return (
             <div>
                 {this.state.pageImages.map((dataUrl, pageIndex) => (
-                <div key={pageIndex} id={`page-${pageIndex}`} className="MusicPage">
-                  {this.renderAnalyzeButton(pageIndex)}
-                  <img src={dataUrl} alt={`Page ${pageIndex + 1}`} style={{ display: 'block' }} />
-                  {this.renderMeasures(pageIndex)}
+                <div 
+                    key={pageIndex}
+                    ref={this.pageRefs[pageIndex]}
+                    className="MusicPage"
+                >
+                    {this.renderAnalyzeButton(pageIndex)}
+                    <img src={dataUrl} alt={`Page ${pageIndex + 1}`} style={{ display: 'block' }} />
+                    {this.renderMeasures(pageIndex)}
                 </div>
                 ))}
             </div>
