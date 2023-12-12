@@ -13,41 +13,44 @@ pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker
 const SERVER_IMAGE_WIDTH = 600;
 
 class SheetMusic extends Component {
+    // Define prop types for component validation.
     static propTypes = {
-        uploadedFile: PropTypes.object,
-        fileUrl: PropTypes.string,
-        onMeasureClick: PropTypes.func,
-        beatsPerMeasure: PropTypes.number,
-        bpm: PropTypes.number,
-        transitionEnd: PropTypes.number,
-        transitionStart: PropTypes.number,
+        uploadedFile    : PropTypes.object,
+        fileUrl         : PropTypes.string,
+        onMeasureClick  : PropTypes.func,
+        beatsPerMeasure : PropTypes.number,
+        bpm             : PropTypes.number,
+        transitionEnd   : PropTypes.number,
+        transitionStart : PropTypes.number,
     };
 
+    // Default props in case they are not provided.
     static defaultProps = {
-        uploadedFile: null,
-        fileUrl: null,
-        onMeasureClick: () => {},
-        beatsPerMeasure: 4,
-        bpm: 60,
-        transitionEnd: 1,
-        transitionStart: 0,
+        uploadedFile    : null,
+        fileUrl         : null,
+        onMeasureClick  : () => {},
+        beatsPerMeasure : 4,
+        bpm             : 60,
+        transitionEnd   : 1,
+        transitionStart : 0,
     };
 
     constructor(props) {
         super(props);
         this.state = {
-            pageImages: [],
-            measureRects: [], // Dimensions are fractional dimensions
-            measureClicked: null,
-            currentHiddenMeasure: null,
-            analyzingPages: new Set(),
-        };
+            pageImages           : [],        // Stores the rendered images of each PDF page.
+            measureRects         : [],        // Stores the dimensions of musical measures.
+            measureClicked       : null,      // Tracks the last measure clicked by the user.
+            currentHiddenMeasure : null,      // Tracks the currently hidden musical measure.
+            analyzingPages       : new Set(), // Set of pages currently under analysis.
+        }; 
 
         // Initialize an array of refs, one for each page.
         this.pageRefs = [];
     }
 
     componentDidMount() {
+        // Convert uploaded files or files from URL to PNG upon mounting.
         if (this.props.uploadedFile) {
             this.convertPdfToPng(this.props.uploadedFile)
                 .then()
@@ -59,6 +62,7 @@ class SheetMusic extends Component {
         }
     }
 
+    // Converts a PDF file to a PNG format.
     convertPdfToPng(file) {
         const fileReader = new FileReader();
 
@@ -69,6 +73,7 @@ class SheetMusic extends Component {
                     const loadingTask = pdfjs.getDocument({ data: arrayBuffer, verbosity: pdfjs.VerbosityLevel.ERRORS });
                     const pdf = await loadingTask.promise;
 
+                    // Iterate through each page of the PDF.
                     for (let page = 1; page <= pdf.numPages; page++) {
                         const pdfPage = await pdf.getPage(page);
                         const originalViewport = pdfPage.getViewport({ scale: 1 });
@@ -90,8 +95,11 @@ class SheetMusic extends Component {
 
                         await pdfPage.render(renderContext).promise;
 
+                        // Update state with the new page image.
                         this.updateStateArray('pageImages', page - 1, canvas.toDataURL('image/png'));
                     }
+
+                    // Update the pageRefs array to match the number of pages.
                     this.pageRefs = [...Array(pdf.numPages)].map(() => React.createRef());
 
                     resolve();
@@ -108,6 +116,7 @@ class SheetMusic extends Component {
         });
     }
 
+    // Converts a PDF from a URL to PNG format.
     async convertPdfUrlToPng(url) {
         try {
             const response = await fetch(url);
@@ -121,6 +130,7 @@ class SheetMusic extends Component {
         }
     }
 
+    // Event handler for clicking on a measure.
     handleMeasureClick(divElement, pageIndex, measureIndex, event) {
         // Update state with the clicked page and measure indices
         this.setState({
@@ -128,10 +138,13 @@ class SheetMusic extends Component {
             currentHiddenMeasure: null,
         });
 
+        // Propagate the event to the parent component.
         this.props.onMeasureClick(event);
     }
 
+    // Event handler for analyzing a page.
     async handleAnalyzeClick(pageIndex) {
+        // Mark the page as being analyzed.
         this.setState(prevState => ({
             analyzingPages: new Set(prevState.analyzingPages).add(pageIndex),
         }));
@@ -161,9 +174,9 @@ class SheetMusic extends Component {
             // Sort measures based on y-coordinate and then x-coordinate
             measures.sort((a, b) => {
                 if (Math.abs(a.y - b.y) <= 50) {
-                    return a.x - b.x; // Sort by x-coordinate (left to right)
+                    return a.x - b.x; // Sort by x-coordinate if y-coordinates are close.
                 }
-                return a.y - b.y; // Sort by y-coordinate
+                return a.y - b.y; // Otherwise, sort by y-coordinate.
             });
 
             // Convert measure dimensions to percentages
@@ -182,11 +195,12 @@ class SheetMusic extends Component {
                 h: (measure.h / scaledImage.height),
             }));
 
+            // Update state with the processed measure rectangles.
             this.updateStateArray('measureRects', pageIndex, measuresAsPercents, []);
         } catch (error) {
             console.error('Error:', error);
-            // Handle the error or update the state as needed
         } finally {
+            // Update the state to indicate analysis completion.
             this.setState(prevState => {
                 const updatedAnalyzingPages = new Set(prevState.analyzingPages);
                 updatedAnalyzingPages.delete(pageIndex);
@@ -200,15 +214,17 @@ class SheetMusic extends Component {
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.onload = () => {
-                // Calculate the scale
+                // Calculate the scaling factor.
                 const scale = targetWidth / img.width;
                 const canvas = document.createElement('canvas');
                 canvas.width = targetWidth;
                 canvas.height = img.height * scale;
 
+                // Draw the scaled image on the canvas.
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
+                // Resolve the promise with the data URL of the scaled image.
                 resolve(canvas.toDataURL('image/png'));
             };
             img.onerror = reject;
@@ -216,6 +232,7 @@ class SheetMusic extends Component {
         });
     }
 
+    // Function to handle the deletion of a measure.
     handleDeleteMeasure = (pageIndex, measureIndex) => {
         this.setState(prevState => {
             const updatedMeasureRects = [...prevState.measureRects];
@@ -224,6 +241,7 @@ class SheetMusic extends Component {
         });
     };
 
+    // Automatically scrolls the viewport to the measure we're about to hide.
     autoScrollToCurrentMeasure() {
         const [pageIndex, measureIndex] = this.state.currentHiddenMeasure;
         const measureRects = this.state.measureRects[pageIndex];
@@ -239,6 +257,7 @@ class SheetMusic extends Component {
             const offsetTop = pageElement.offsetTop;
             const scrollPosition = offsetTop + measureTop - window.innerHeight * 0.20;
 
+            // Perform the scroll action.
             window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
         }
     }
