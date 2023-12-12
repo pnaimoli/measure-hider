@@ -8,6 +8,7 @@ import packageInfo from '../package.json';
 const App = () => {
     const sheetMusicRef = useRef(null);
     const [uploadedFile, setUploadedFile] = useState(null);
+    const [fileUrl, setFileUrl] = useState(null); // State for URL parameter
     const [isMetronomeOn, setIsMetronomeOn] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false); // Added state for Play/Stop
     const [bpm, setBpm] = useState(60); // Default BPM
@@ -23,6 +24,13 @@ const App = () => {
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
+
+        // Logic to extract URL parameter
+        const queryParams = new URLSearchParams(window.location.search);
+        const urlParam = queryParams.get('url');
+        if (urlParam) {
+            setFileUrl(urlParam);
+        }
 
         return () => {
             window.removeEventListener('scroll', handleScroll);
@@ -96,6 +104,7 @@ const App = () => {
     const handleFileUpload = (event) => {
         setIsPlaying(false);
         setUploadedFile(event.target.files[0]);
+        setFileUrl(null); // Reset URL when a file is uploaded
     };
 
     const handleMeasureClick = (event) => {
@@ -150,7 +159,7 @@ const App = () => {
             </div>
           </header>
           <div className="App-content">
-            {!uploadedFile && (
+            {!uploadedFile && !fileUrl && (
             <div className="InstructionalContent">
                 <h2>Welcome to Measure Hider</h2>
                 <div className="Instructions">
@@ -177,7 +186,16 @@ const App = () => {
                 </div>
             </div>
             )}
-            <SheetMusic key={uploadedFile ? uploadedFile.name : null} uploadedFile={uploadedFile} bpm={bpm} transitionStart={transitionStart} transitionEnd={transitionEnd} beatsPerMeasure={beatsPerMeasure} ref={sheetMusicRef} onMeasureClick={handleMeasureClick} />
+            <SheetMusic
+                key={uploadedFile ? uploadedFile.name : fileUrl}
+                uploadedFile={uploadedFile}
+                fileUrl={fileUrl}
+                bpm={bpm}
+                transitionStart={transitionStart}
+                transitionEnd={transitionEnd}
+                beatsPerMeasure={beatsPerMeasure}
+                ref={sheetMusicRef}
+                onMeasureClick={handleMeasureClick} />
           </div>
         </div>
     );

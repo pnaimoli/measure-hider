@@ -19,9 +19,13 @@ class SheetMusic extends Component {
 
     componentDidMount() {
         if (this.props.uploadedFile) {
-          this.convertPdfToPng(this.props.uploadedFile)
-            .then()
-            .catch(error => console.error("Error converting PDF to PNG: ", error));
+            this.convertPdfToPng(this.props.uploadedFile)
+                .then()
+                .catch(error => console.error("Error converting PDF to PNG: ", error));
+        } else if (this.props.fileUrl) {
+            this.convertPdfUrlToPng(this.props.fileUrl)
+                .then()
+                .catch(error => console.error("Error fetching and converting PDF: ", error));
         }
     }
 
@@ -76,6 +80,18 @@ class SheetMusic extends Component {
 
             fileReader.readAsArrayBuffer(file);
         });
+    }
+
+    convertPdfUrlToPng(url) {
+        return fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.arrayBuffer();
+            })
+            .then(arrayBuffer => this.convertPdfToPng(new Blob([arrayBuffer])))
+            .catch(error => console.error("Error fetching PDF: ", error));
     }
 
     handleMeasureClick(divElement, pageIndex, measureIndex, event) {
@@ -301,12 +317,6 @@ class SheetMusic extends Component {
             // This can happen legitimately on an empty page, for example.
             return;
         }
-
-        const originalImage = new Image();
-        originalImage.src = this.state.pageImages[pageIndex];
-        const scaledWidth = 600; // Assuming 600 is the width used for analysis
-        const scale = originalImage.width / scaledWidth;
-        const scaledHeight = originalImage.height / scale;
 
         return measures.map((measure, measureIndex) => {
             // Determine if the current measure should have the "played" class
