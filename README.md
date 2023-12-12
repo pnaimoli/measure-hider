@@ -26,7 +26,15 @@ Measure Hider is a web application designed for musicians to enhance their sight
 
 Discover a new way to practice and improve your sight-reading skills with Measure Hider.
 
-## Project Organization
+## Usage
+
+Follow the on-screen instructions.  Pro-tip: use a bookmarklet to instantly redirect pdfs in your browser to Measure Hider.  Bookmarklet code:
+```javascript
+javascript:(function(){const currentUrl='https://corsproxy.io/?%27+encodeURIComponent(window.location.href);if(currentUrl.endsWith(%27.pdf%27)){window.open(%27https://peternaimoli.com/measure-hider/?url=%27+encodeURIComponent(currentUrl));}else{alert(%27Not a PDF URL%27);}})();
+```
+
+## Development Information
+### Project Organization
 
 The project is organized into several key directories and files to ensure easy navigation and understanding of the codebase. Here's an overview of the file structure and the purpose of each component:
 
@@ -37,7 +45,7 @@ The project is organized into several key directories and files to ensure easy n
 
 Each directory is structured to maintain a separation of concerns, ensuring that the frontend, backend, and model training aspects of the project are distinct and easily manageable.
 
-## Installation
+### Installation
 
 The installation and running of the project are currently handled through an ad-hoc series of steps. Follow these instructions to set up and run a test server on your machine:
 
