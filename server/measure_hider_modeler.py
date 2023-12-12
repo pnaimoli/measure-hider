@@ -39,7 +39,7 @@ def process_image():
     image = Image.open(io.BytesIO(image_data))
 
     model = YOLO("model.pt")
-    results = model(image)[0]  # predict on an image
+    results = model(image, verbose=False)[0]  # predict on an image
 
     # Convert the tensor to a list for JSON serialization
     predictions = []
