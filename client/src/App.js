@@ -10,13 +10,18 @@ const App = () => {
     const sheetMusicRef = useRef(null);
     const [uploadedFile, setUploadedFile] = useState(null);
     const [fileUrl, setFileUrl] = useState(null); // State for URL parameter
-    const [isMetronomeOn, setIsMetronomeOn] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false); // Added state for Play/Stop
-    const [bpm, setBpm] = useState(60); // Default BPM
-    const [beatsPerMeasure, setBeatsPerMeasure] = useState(4); // Default time signature
-    const [transitionStart, setTransitionStart] = useState(0.25); // Default start of transition (e.g., 25% into the measure)
-    const [transitionEnd, setTransitionEnd] = useState(0.75); // Default end of transition (e.g., 75% into the measure)
     const [isScrolled, setIsScrolled] = useState(false);
+
+    // Initialize state with values from localStorage or default values
+    const [bpm, setBpm] = useState(localStorage.getItem('bpm') || 60);
+    // Default time signature is 4/4
+    const [beatsPerMeasure, setBeatsPerMeasure] = useState(localStorage.getItem('beatsPerMeasure') || 4);
+    // Default start of transition (e.g., 25% into the measure)
+    const [transitionStart, setTransitionStart] = useState(localStorage.getItem('transitionStart') || 0.25);
+    // Default end of transition (e.g., 75% into the measure)
+    const [transitionEnd, setTransitionEnd] = useState(localStorage.getItem('transitionEnd') || 0.75);
+    const [isMetronomeOn, setIsMetronomeOn] = useState(localStorage.getItem('isMetronomeOn') === 'true');
 
     useEffect(() => {
         const handleScroll = () => {
@@ -37,6 +42,23 @@ const App = () => {
             window.removeEventListener('scroll', handleScroll);
         };
     }, []);
+
+    // Use useEffect to save state changes to localStorage
+    useEffect(() => {
+        localStorage.setItem('bpm', bpm);
+    }, [bpm]);
+    useEffect(() => {
+        localStorage.setItem('beatsPerMeasure', beatsPerMeasure);
+    }, [beatsPerMeasure]);
+    useEffect(() => {
+        localStorage.setItem('transitionStart', transitionStart);
+    }, [transitionStart]);
+    useEffect(() => {
+        localStorage.setItem('transitionEnd', transitionEnd);
+    }, [transitionEnd]);
+    useEffect(() => {
+        localStorage.setItem('isMetronomeOn', isMetronomeOn);
+    }, [isMetronomeOn]);
 
     ////////////////////////////////////////////////////////////////////////////////
     // This is the main function that handles playing the metronome
@@ -145,8 +167,8 @@ const App = () => {
                   ruler={false}
                   label={false}
                   preventWheel={false}
-                  minValue={.25}
-                  maxValue={.75}
+                  minValue={transitionStart}
+                  maxValue={transitionEnd}
                   style={{
                     border: 'none',
                     boxShadow: 'none',
