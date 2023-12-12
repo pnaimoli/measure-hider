@@ -10,7 +10,7 @@ class SheetMusic extends Component {
         super(props);
         this.state = {
             pageImages: [],
-            measureRects: [],
+            measureRects: [], // Note these are scaled so that width of the image is 600.
             measureClicked: null,
             currentHiddenMeasure: null,
             analyzingPages: new Set(),
@@ -94,18 +94,21 @@ class SheetMusic extends Component {
         }), () => {
             const imgSrc = this.state.pageImages[pageIndex];
 
-            // Prepare the request body
-            const requestBody = {
-                imageData: imgSrc  // Assuming this is a data:image base64 string
-            };
+            // Scale the image to 600 width while maintaining aspect ratio
+            this.scaleImage(imgSrc, 600).then(scaledImageSrc => {
+                // Prepare the request body with the scaled image
+                const requestBody = {
+                    imageData: scaledImageSrc // Scaled image data
+                };
 
-            // Send the request to the Flask endpoint
-            fetch('./process-image', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
+                // Send the request to the Flask endpoint
+                return fetch('./process-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
             })
             .then(response => response.json())
             .then(measures => {
@@ -134,6 +137,42 @@ class SheetMusic extends Component {
         });
     }
 
+    // Utility function to scale the image
+    scaleImage(imageSrc, targetWidth) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                // Calculate the scale
+                const scale = targetWidth / img.width;
+                const canvas = document.createElement('canvas');
+                canvas.width = targetWidth;
+                canvas.height = img.height * scale;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                resolve(canvas.toDataURL('image/png'));
+            };
+            img.onerror = reject;
+            img.src = imageSrc;
+        });
+    }
+
+    rectToPercentage(pageIndex, measureRect) {
+        const originalImage = new Image();
+        originalImage.src = this.state.pageImages[pageIndex];
+        const scaledWidth = 600; // Assuming 600 is the width used for analysis
+        const scale = originalImage.width / scaledWidth;
+        const scaledHeight = originalImage.height / scale;
+
+        return {
+            x: (measureRect.x / scaledWidth),
+            y: (measureRect.y / scaledHeight),
+            w: (measureRect.w / scaledWidth),
+            h: (measureRect.h / scaledHeight)
+        };
+    }
+
     handleDeleteMeasure = (pageIndex, measureIndex) => {
         this.setState(prevState => {
             const updatedMeasureRects = [...prevState.measureRects];
@@ -154,7 +193,8 @@ class SheetMusic extends Component {
         // Assuming each page is within a container with a unique ID like "page-0", "page-1", etc.
         const pageElement = document.getElementById(`page-${pageIndex}`);
         if (pageElement) {
-            const measureTop = currentMeasure.y; // Y coordinate of the measure
+            const percentageRect = this.rectToPercentage(pageIndex, currentMeasure)
+            const measureTop = percentageRect.y * pageElement.clientHeight;
             const offsetTop = pageElement.offsetTop;
             const scrollPosition = offsetTop + measureTop - window.innerHeight * 0.20;
 
@@ -262,6 +302,12 @@ class SheetMusic extends Component {
             return;
         }
 
+        const originalImage = new Image();
+        originalImage.src = this.state.pageImages[pageIndex];
+        const scaledWidth = 600; // Assuming 600 is the width used for analysis
+        const scale = originalImage.width / scaledWidth;
+        const scaledHeight = originalImage.height / scale;
+
         return measures.map((measure, measureIndex) => {
             // Determine if the current measure should have the "played" class
             const isPlayed = this.isMeasurePlayed(pageIndex, measureIndex);
@@ -269,6 +315,9 @@ class SheetMusic extends Component {
             const measureDuration = beats * 60 / this.props.bpm; // in seconds
             const transitionDuration = measureDuration * (this.props.transitionEnd - this.props.transitionStart)
             const transitionDelay = measureDuration * this.props.transitionStart;
+
+            // Turn the measure back into original coordinates.
+            const percentageRect = this.rectToPercentage(pageIndex, measure);
 
             return (
             <div
@@ -282,10 +331,10 @@ class SheetMusic extends Component {
             onMouseLeave={(e) => this.handleButtonRelease(pageIndex, measureIndex, e)}
             style={{
                 position: 'absolute',
-                left: measure.x,
-                top: measure.y,
-                width: measure.w,
-                height: measure.h,
+                left: `${percentageRect.x*100}%`,
+                top: `${percentageRect.y*100}%`,
+                width: `${percentageRect.w*100}%`,
+                height: `${percentageRect.h*100}%`,
                 background: 'rgba(255, 0, 255, 0.15)',
                 border: '0px solid red',
                 fontSize: '16px',

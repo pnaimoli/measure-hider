@@ -1,5 +1,13 @@
 .MusicPage {
   position: relative;
+  width: 100%; /* Sets the width to 100% of the viewport width */
+  box-sizing: border-box; /* Ensures padding and borders are included in the width */
+}
+
+.MusicPage img {
+  width: 100%; /* Makes the image take the full width of its parent */
+  height: auto; /* Keeps the image's aspect ratio intact */
+  display: block; /* Ensures the image takes up its own line */
 }
 
 .analyze-button-disabled {
