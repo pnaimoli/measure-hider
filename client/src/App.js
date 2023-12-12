@@ -21,7 +21,7 @@ const App = () => {
     const [transitionStart, setTransitionStart] = useState(localStorage.getItem('transitionStart') || 0.25);
     // Default end of transition (e.g., 75% into the measure)
     const [transitionEnd, setTransitionEnd] = useState(localStorage.getItem('transitionEnd') || 0.75);
-    const [isMetronomeOn, setIsMetronomeOn] = useState(localStorage.getItem('isMetronomeOn') === 'true');
+    const [isMetronomeOn, setIsMetronomeOn] = useState(localStorage.getItem('isMetronomeOn') !== null ? localStorage.getItem('isMetronomeOn') === 'true' : true);
 
     useEffect(() => {
         const handleScroll = () => {
