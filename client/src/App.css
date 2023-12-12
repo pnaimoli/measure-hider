@@ -23,10 +23,12 @@
   top: 0;
   z-index: 999;
   transition: height 0.3s;
+  flex-wrap: nowrap; /* Prevent wrapping */
 }
 
 .App-header.shrink {
   height: 30px;
+  /* scrollbar-gutter: stable; */ /* This isn't working for me */
 }
 
 .App-content {
@@ -40,22 +42,35 @@
   filter: invert(100%); /* Invert colors */
   height: 100%; /* Adjust as needed */
   max-height: 80px;
-  margin: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
   width: auto;
 }
 
-.MetronomeSettings label {
-  margin-left: 20px; /* Added margin for spacing */
+.MetronomeSettings {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap; /* Prevent wrapping */
+  white-space: nowrap;
 }
 
-.MetronomeSettings input[type="range"] {
-  margin: 0 10px;
+.MetronomeSettings select {
+  height: fit-content;
+  margin-right: 10px;
+
+}
+
+.MetronomeSettings label {
+  display: flex;
+  flex-wrap: nowrap; /* Prevent wrapping */
+  align-items: center;
 }
 
 .MetronomeToggleText {
   display: inline-block; /* Makes the element respect width and height */
   width: 40px; /* Set a fixed width */
-  text-align: center; /* Center the text within the fixed width */
+  text-align: left; /* Center the text within the fixed width */
+  height: fit-content;
 }
 
 .range-slider {

@@ -3,6 +3,7 @@ import MultiRangeSlider from "multi-range-slider-react";
 import './App.css';
 import SheetMusic from './SheetMusic'
 import sheetMusicLogo from './sheet-music-logo.png';
+import {ReactComponent as MetronomeIcon} from './metronome.svg';
 import packageInfo from '../package.json';
 
 const App = () => {
@@ -115,26 +116,26 @@ const App = () => {
         <div className="App">
           <header className={`App-header ${isScrolled ? 'shrink' : ''}`}>
             {/* Version Display */}
-            <div className="version-display">
+            <div className="version-display" style={{ display: isScrolled ? 'none' : 'inherit' }}>
                 Measure Hider {packageInfo.version}
             </div>
             <img src={sheetMusicLogo} alt="Sheet Music" className="SheetMusicLogo" />
             <div className="MetronomeSettings">
+              <select value={beatsPerMeasure} onChange={(e) => setBeatsPerMeasure(e.target.value)}>
+                <option value="4">4/4</option>
+                <option value="3">3/4</option>
+              </select>
               <label>
-                <select value={beatsPerMeasure} onChange={(e) => setBeatsPerMeasure(e.target.value)}>
-                  <option value="4">4/4</option>
-                  <option value="3">3/4</option>
-                </select>
-              </label>
-              <label>
-                Metronome:
+                <MetronomeIcon />:
                 <input type="checkbox" checked={isMetronomeOn} onChange={() => setIsMetronomeOn(!isMetronomeOn)}/>
                 <span className="MetronomeToggleText">
                   {isMetronomeOn ? 'ON' : 'OFF'}
                 </span>
               </label>
+              <label>
                 <input type="range" min="40" max="240" value={bpm} onChange={(e) => (setBpm(e.target.value))} />
                 {bpm} BPM
+              </label>
             </div>
             <div className="range-slider">
               <MultiRangeSlider
@@ -149,6 +150,7 @@ const App = () => {
                   style={{
                     border: 'none',
                     boxShadow: 'none',
+                    width: '175px',
                   }}
                   onInput={(e) => {setTransitionStart(e.minValue);
                                    setTransitionEnd(e.maxValue)}}
