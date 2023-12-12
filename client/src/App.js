@@ -124,7 +124,7 @@ const App = () => {
                   {isMetronomeOn ? 'ON' : 'OFF'}
                 </span>
               </label>
-                <input type="range" min="40" max="240" value={bpm} onChange={(e) => (setBpm(e.target.value))} disabled={!isMetronomeOn} />
+                <input type="range" min="40" max="240" value={bpm} onChange={(e) => (setBpm(e.target.value))} />
                 {bpm} BPM
             </div>
             <div className="range-slider">
