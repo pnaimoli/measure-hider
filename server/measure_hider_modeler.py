@@ -6,31 +6,17 @@ import os
 from PIL import Image
 from ultralytics import YOLO
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='client')
 
-@app.route('/')
-def index():
-    return '''
-    <html>
-        <head>
-            <title>Measure Hider Modeler</title>
-        </head>
-        <body>
-            <h1>Welcome to Measure Hider Modeler</h1>
-            <p>This is a test page for the Measure Hider Modeler application.</p>
-        </body>
-    </html>
-    '''
-
-@app.route('/measure-hider/', defaults={'path': ''})
-@app.route('/measure-hider/<path:path>')
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
 def serve(path):
     if path != "" and os.path.exists(app.static_folder + '/' + path):
         return send_from_directory(app.static_folder, path)
     else:
         return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/measure-hider/process-image', methods=['POST'])
+@app.route('/process-image', methods=['POST'])
 def process_image():
     # Extract the image data URL from the request
     image_data_url = request.json.get('imageData')
@@ -38,7 +24,9 @@ def process_image():
     image_data = base64.b64decode(encoded)
     image = Image.open(io.BytesIO(image_data))
 
-    model = YOLO("model.pt")
+    current_script_dir = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(current_script_dir, 'model.pt')
+    model = YOLO(model_path)
     results = model(image, verbose=False)[0]  # predict on an image
 
     # Convert the tensor to a list for JSON serialization

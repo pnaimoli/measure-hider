@@ -15,7 +15,7 @@ class MeasureHiderModelerTestCase(unittest.TestCase):
 
         # Example test for the /process-image route
         test_data = {'imageData': image_data}  # replace with your test data URL
-        response = self.app.post('/measure-hider/process-image', data=json.dumps(test_data), content_type='application/json')
+        response = self.app.post('/process-image', data=json.dumps(test_data), content_type='application/json')
         self.assertEqual(response.status_code, 200)
 
         # Additional assertions to verify the response data can be added here
