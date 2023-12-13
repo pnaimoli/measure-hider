@@ -39,9 +39,9 @@ javascript:(function(){const currentUrl='https://corsproxy.io/?%27+encodeURIComp
 The project is organized into several key directories and files to ensure easy navigation and understanding of the codebase. Here's an overview of the file structure and the purpose of each component:
 
 - **client/** - This directory contains the React code for the frontend of the application.
-- **dist/** - The production directory. It contains the build that gets uploaded to the web server for deployment.
 - **model/** - Houses the modeling code. This is where the YOLO model and related machine learning code are located.
 - **server/** - Contains a WSGI server that uses the model created in the 'model' directory to serve AJAX requests for the client code.
+- **build/** - The production directory. It contains the build the final build.
 
 Each directory is structured to maintain a separation of concerns, ensuring that the frontend, backend, and model training aspects of the project are distinct and easily manageable.
 
@@ -50,20 +50,9 @@ Each directory is structured to maintain a separation of concerns, ensuring that
 The installation and running of the project are currently handled through an ad-hoc series of steps. Follow these instructions to set up and run a test server on your machine:
 
 1. **Prepare the Server Directory:**
-   - Copy the contents of the `server/` directory into `dist/`.
-
-2. **Set Up the Client:**
-   - Navigate to the `client` directory.
-   - Run `npm install` to install the necessary dependencies.
-   - After installation, run `npm build` to build the client-side application.
-
-3. **Organize Build Results:**
-   - Copy the build results (from the `client` build process) to `dist/static/`.
-
-4. **Add the Model:**
-   - Ensure that the model generated from YOLO training is placed in the root directory of `dist/` and named `model.pt`.
+   - Run `./build.sh`.
 
 5. **Run the Test Server:**
-   - You can now run a test server on your machine. In the `dist` directory, use the command `python measure_hider_modeler.py` to start the server.
+   - You can now run a test server on your machine. In the `build` directory, use the command `python measure_hider_modeler.py` to start the server.
 
 These steps will set up both the client and server sides of the application, allowing you to run a test server locally for development and testing purposes.
