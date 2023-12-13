@@ -30,7 +30,7 @@ Discover a new way to practice and improve your sight-reading skills with Measur
 
 Follow the on-screen instructions.  Pro-tip: use a bookmarklet to instantly redirect pdfs in your browser to Measure Hider.  Bookmarklet code:
 ```javascript
-javascript:(function(){const currentUrl='https://corsproxy.io/?%27+encodeURIComponent(window.location.href);if(currentUrl.endsWith(%27.pdf%27)){window.open(%27https://peternaimoli.com/measure-hider/?url=%27+encodeURIComponent(currentUrl));}else{alert(%27Not a PDF URL%27);}})();
+javascript:(function(){const currentUrl='https://corsproxy.io/?%27+encodeURIComponent(window.location.href);if(currentUrl.endsWith(%27.pdf%27)){window.open(%27https://<SERVER-URL>/measure-hider/?url=%27+encodeURIComponent(currentUrl));}else{alert(%27Not a PDF URL%27);}})();
 ```
 
 ## Development Information
