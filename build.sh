@@ -1,7 +1,7 @@
 #!/usr/local/bin/bash
 
 mkdir -p build
-cd client && npm run build; cd ..
+cd client && npm install && npm run build; cd ..
 mkdir -p build/client
 rm -rf build/client/*
 cp -r client/build/* build/client/
