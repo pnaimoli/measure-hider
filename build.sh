@@ -5,7 +5,7 @@ set -e
 mkdir -p build
 
 cd client
-npm install
+npm install --no-audit --no-fund
 npm run build
 cd ..
 
