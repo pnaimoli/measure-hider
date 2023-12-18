@@ -73,12 +73,19 @@
   height: fit-content;
 }
 
-.range-slider {
-    width: 200px; /* or any specific width */
+.BPMText {
+  display: inline-block; /* Makes the element respect width and height */
+  width: 35px; /* Set a fixed width */
+  text-align: left; /* Center the text within the fixed width */
+  height: fit-content;
 }
 
-.UploadSection {
-  margin-left: 20px; /* Added margin for spacing */
+.range-slider {
+    flex-shrink: 0;      /* Prevents the item from shrinking */
+    width: 200px; /* Set the width of the container */
+    display: flex; /* Use flexbox to center the child */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
 }
 
 .InstructionalContent {

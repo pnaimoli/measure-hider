@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import MultiRangeSlider from "multi-range-slider-react";
+import Slider from '@mui/material/Slider';
 import './App.css';
 import SheetMusic from './SheetMusic'
 import sheetMusicLogo from './sheet-music-logo.png';
@@ -156,27 +156,25 @@ const App = () => {
               </label>
               <label>
                 <input type="range" min="40" max="240" value={bpm} onChange={(e) => (setBpm(e.target.value))} />
-                {bpm} BPM
+                <span className="BPMText">
+                  {bpm}
+                </span>
+                BPM
               </label>
             </div>
             <div className="range-slider">
-              <MultiRangeSlider
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  ruler={false}
-                  label={false}
-                  preventWheel={false}
-                  minValue={transitionStart}
-                  maxValue={transitionEnd}
-                  style={{
-                    border: 'none',
-                    boxShadow: 'none',
-                    width: '175px',
-                  }}
-                  onInput={(e) => {setTransitionStart(e.minValue);
-                                   setTransitionEnd(e.maxValue)}}
-              />
+                <Slider
+                    value={[transitionStart, transitionEnd]}
+                    onChange={(event, newValue) => {setTransitionStart(newValue[0]);
+                                                    setTransitionEnd(newValue[1])}}
+                    valueLabelDisplay="auto"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    sx={{'width':'175px',}}
+                    marks
+                    disableSwap
+                />
             </div>
             <div className="UploadSection">
               <input type="file" onChange={handleFileUpload} accept="application/pdf" />
