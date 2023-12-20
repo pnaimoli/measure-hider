@@ -6,7 +6,7 @@ import sheetMusicLogo from './sheet-music-logo.png';
 import {ReactComponent as MetronomeIcon} from './metronome.svg';
 import packageInfo from '../package.json';
 
-const App = () => {
+export default const App = () => {
     const sheetMusicRef = useRef(null);
     const [uploadedFile, setUploadedFile] = useState(null);
     const [fileUrl, setFileUrl] = useState(null); // State for URL parameter
@@ -222,5 +222,3 @@ const App = () => {
         </div>
     );
 };
-
-export default App;
