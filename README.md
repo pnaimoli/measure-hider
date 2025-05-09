@@ -50,7 +50,7 @@ Each directory is structured to maintain a separation of concerns, ensuring that
 The installation and running of the project are currently handled through an ad-hoc series of steps. Follow these instructions to set up and run a test server on your machine:
 
 1. **Prepare the Server Directory:**
-   - Run `./build.sh`.
+   - Run `make build`.
 
 5. **Run the Test Server:**
    - You can now run a test server on your machine. In the `build` directory, use the command `python measure_hider_modeler.py` to start the server.
